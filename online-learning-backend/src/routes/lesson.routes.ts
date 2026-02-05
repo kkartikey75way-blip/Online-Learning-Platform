@@ -10,8 +10,9 @@ router.post(
   "/",
   authenticate,
   instructorOnly,
-  upload.single("video"),
+  upload.single("file"),
   createLesson
 );
+
 
 export default router;

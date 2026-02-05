@@ -10,35 +10,33 @@ const generateToken = (userId: string) =>
     process.env.JWT_SECRET!,
     { expiresIn: "7d" }
   );
-export const register = async (
-  req: Request,
-  res: Response
-) => {
+export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, role } = req.body;
 
+   
     if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "All fields are required" });
+      return res.status(400).json({
+        message: "Name, email and password are required",
+      });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: "User already exists" });
+      return res.status(400).json({
+        message: "User already exists",
+      });
     }
 
     const verificationToken = crypto
       .randomBytes(32)
       .toString("hex");
 
-    const user = await User.create({
+    await User.create({
       name,
       email,
       password,
-      role: role ?? "STUDENT",
+      role: role === "INSTRUCTOR" ? "INSTRUCTOR" : "STUDENT",
       provider: "LOCAL",
       isVerified: false,
       verificationToken,
@@ -47,33 +45,30 @@ export const register = async (
       ),
     });
 
-    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-
     try {
+      const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+
       await sendEmail(
         email,
         "Verify your email",
-        `
-          <h2>Welcome ${name}</h2>
-          <p>Click the link below to verify your email:</p>
-          <a href="${verifyUrl}">Verify Email</a>
-        `
+        `<p>Click to verify:</p><a href="${verifyUrl}">${verifyUrl}</a>`
       );
-    } catch (emailError) {
-      console.error("Email send failed:", emailError);
+    } catch (emailErr) {
+      console.error("Email error (ignored):", emailErr);
     }
 
     return res.status(201).json({
       message:
-        "Registration successful. Please check your email to verify your account.",
+        "Registration successful. Please verify your email.",
     });
-  } catch (error) {
-    console.error("Register error:", error);
-    return res
-      .status(500)
-      .json({ message: "Registration failed" });
+  } catch (err) {
+    console.error("REGISTER FAILED:", err);
+    return res.status(500).json({
+      message: "Registration failed",
+    });
   }
 };
+
 export const login = async (
   req: Request,
   res: Response
@@ -136,7 +131,6 @@ export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.params;
 
-    // 1️⃣ Try normal verification (first click)
     const user = await User.findOne({
       verificationToken: token,
       verificationTokenExpires: { $gt: new Date() },
@@ -155,7 +149,6 @@ export const verifyEmail = async (req: Request, res: Response) => {
       });
     }
 
-    // 2️⃣ If token not found, check if ANY user was already verified with this token
     const alreadyVerifiedUser = await User.findOne({
       isVerified: true,
     });
@@ -167,15 +160,17 @@ export const verifyEmail = async (req: Request, res: Response) => {
       });
     }
 
-    // 3️⃣ Truly invalid
     return res.status(400).json({
       message: "Invalid or expired verification link",
     });
   } catch (error) {
     console.error("Verify email error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Verification failed",
     });
   }
 };
+
+
+
 

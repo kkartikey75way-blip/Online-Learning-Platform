@@ -11,17 +11,20 @@ import assignmentRoutes from "./routes/assignment.routes";
 
 const app = express();
 
-/* ================== MIDDLEWARE ================== */
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: "http://localhost:5173",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+app.options("*", cors());
+
 app.use(express.json());
 
-/* ================== ROUTES ================== */
 app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/modules", moduleRoutes);
@@ -30,7 +33,6 @@ app.use("/progress", progressRoutes);
 app.use("/quizzes", quizRoutes);
 app.use("/assignments", assignmentRoutes);
 
-/* ================== HEALTH CHECK ================== */
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "OK" });
 });

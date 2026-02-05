@@ -19,25 +19,26 @@ export default function Signup() {
   });
 
   const register = async () => {
-    try {
-      const res = await api.post("/auth/register", form);
+  try {
+    await api.post("/auth/register", form);
 
-      await Swal.fire({
-        icon: "success",
-        title: "Verification email sent 📩",
-        text: "Please verify your email before logging in",
-        confirmButtonColor: "#14b8a6",
-      });
+    await Swal.fire({
+      icon: "success",
+      title: "Verification email sent",
+      text: "Please verify your email before logging in",
+      confirmButtonColor: "#14b8a6",
+    });
 
-      navigate("/login");
-    } catch (error: any) {
-      Swal.fire(
-        "Signup failed",
-        error?.response?.data?.message || "Something went wrong",
-        "error"
-      );
-    }
-  };
+    navigate("/login");
+  } catch (error: any) {
+    Swal.fire(
+      "Signup failed",
+      error?.response?.data?.message || "Something went wrong",
+      "error"
+    );
+  }
+};
+
 
 
   const handleGoogleSignup = async (credential: string) => {

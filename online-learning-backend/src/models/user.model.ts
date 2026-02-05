@@ -5,9 +5,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
-  avatar?: string;
   role: "STUDENT" | "INSTRUCTOR";
-  provider: "GOOGLE" | "LOCAL";
+  provider: "LOCAL" | "GOOGLE";
   isVerified: boolean;
   verificationToken?: string;
   verificationTokenExpires?: Date;
@@ -19,7 +18,6 @@ const userSchema = new Schema<IUser>(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, select: false },
-    avatar: String,
     role: {
       type: String,
       enum: ["STUDENT", "INSTRUCTOR"],
@@ -27,14 +25,12 @@ const userSchema = new Schema<IUser>(
     },
     provider: {
       type: String,
-      enum: ["GOOGLE", "LOCAL"],
+      enum: ["LOCAL", "GOOGLE"],
       default: "LOCAL",
     },
     isVerified: { type: Boolean, default: false },
-
-    // ✅ REQUIRED
-    verificationToken: String,
-    verificationTokenExpires: Date,
+    verificationToken: { type: String },
+    verificationTokenExpires: { type: Date },
   },
   { timestamps: true }
 );
@@ -45,9 +41,9 @@ userSchema.pre("save", async function () {
 });
 
 userSchema.methods.comparePassword = function (
-  enteredPassword: string
+  password: string
 ) {
-  return bcrypt.compare(enteredPassword, this.password!);
+  return bcrypt.compare(password, this.password!);
 };
 
 export const User = mongoose.model<IUser>("User", userSchema);

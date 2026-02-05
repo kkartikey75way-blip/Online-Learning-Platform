@@ -1,5 +1,6 @@
-import { Response } from "express";
+import cloudinary from "../config/cloudinary";
 import type { AuthRequest } from "../types/auth-request";
+import { Response } from "express";
 import { Lesson } from "../models/lesson.model";
 
 export const createLesson = async (
@@ -7,30 +8,33 @@ export const createLesson = async (
   res: Response
 ) => {
   try {
-    const {
-      title,
-      moduleId,
-      content,
-      order,
-      dripAfterDays = 0, 
-    } = req.body;
+    const { title, moduleId, content, order } = req.body;
 
-    const videoUrl = req.file?.path;
+    let videoUrl: string | undefined;
+
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(
+        req.file.path,
+        {
+          folder: "online-learning",
+          resource_type: "auto",
+        }
+      );
+
+      videoUrl = result.secure_url;
+    }
 
     const lesson = await Lesson.create({
       title,
       module: moduleId,
       content,
-      videoUrl,
       order,
-      dripAfterDays,
+      videoUrl,
     });
 
     res.status(201).json(lesson);
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Lesson creation failed" });
+    res.status(500).json({ message: "Lesson creation failed" });
   }
 };
