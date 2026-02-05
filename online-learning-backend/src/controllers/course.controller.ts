@@ -3,13 +3,16 @@ import type { AuthRequest } from "../types/auth-request";
 import { Course } from "../models/course.model";
 import { Enrollment } from "../models/enrollment.model";
 
+
 export const createCourse = async (
   req: AuthRequest,
   res: Response
 ) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+    if (!req.user || req.user.role !== "INSTRUCTOR") {
+      return res.status(403).json({
+        message: "Only instructors can create courses",
+      });
     }
 
     const {
@@ -21,18 +24,27 @@ export const createCourse = async (
       dripEnabled,
     } = req.body;
 
+    if (!title || !description || !category || !capacity) {
+      return res.status(400).json({
+        message: "Missing required fields",
+      });
+    }
+
     const course = await Course.create({
       title,
       description,
       category,
-      price,
+      price: price ?? 0,
       capacity,
-      dripEnabled,
+      dripEnabled: dripEnabled ?? false,
       instructor: req.user._id,
+      isPublished: false, // 👈 DRAFT by default
+      enrolledCount: 0,
     });
 
     res.status(201).json(course);
-  } catch {
+  } catch (error) {
+    console.error("Create course error:", error);
     res.status(500).json({ message: "Course creation failed" });
   }
 };
@@ -47,10 +59,12 @@ export const getAllCourses = async (
       .sort({ createdAt: -1 });
 
     res.json(courses);
-  } catch {
+  } catch (error) {
+    console.error("Fetch courses error:", error);
     res.status(500).json({ message: "Failed to fetch courses" });
   }
 };
+
 
 export const getCourseById = async (
   req: AuthRequest,
@@ -65,10 +79,12 @@ export const getCourseById = async (
     }
 
     res.json(course);
-  } catch {
+  } catch (error) {
+    console.error("Fetch course error:", error);
     res.status(500).json({ message: "Failed to fetch course" });
   }
 };
+
 
 export const enrollInCourse = async (
   req: AuthRequest,
@@ -79,37 +95,40 @@ export const enrollInCourse = async (
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const userId = req.user._id;
     const courseId = req.params.id;
 
     const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).json({ message: "Course not found" });
+    if (!course || !course.isPublished) {
+      return res.status(404).json({ message: "Course not available" });
     }
 
     if (course.enrolledCount >= course.capacity) {
       return res.status(400).json({ message: "Course is full" });
     }
 
-    const alreadyEnrolled = await Enrollment.findOne({
-      user: userId,
+    const exists = await Enrollment.findOne({
+      user: req.user._id,
       course: courseId,
     });
 
-    if (alreadyEnrolled) {
+    if (exists) {
       return res.status(400).json({
         message: "Already enrolled",
       });
     }
 
+    // Atomic operation
     await Enrollment.create({
-      user: userId,
+      user: req.user._id,
       course: courseId,
+      progress: 0,
+      completed: false,
     });
 
-    await Course.findByIdAndUpdate(courseId, {
-      $inc: { enrolledCount: 1 },
-    });
+    await Course.updateOne(
+      { _id: courseId },
+      { $inc: { enrolledCount: 1 } }
+    );
 
     res.json({ message: "Enrolled successfully" });
   } catch (error) {
@@ -117,6 +136,7 @@ export const enrollInCourse = async (
     res.status(500).json({ message: "Enrollment failed" });
   }
 };
+
 export const getMyEnrolledCourses = async (
   req: AuthRequest,
   res: Response
@@ -137,10 +157,10 @@ export const getMyEnrolledCourses = async (
     });
 
     res.json(enrollments);
-  } catch {
-    res
-      .status(500)
-      .json({ message: "Failed to fetch enrollments" });
+  } catch (error) {
+    console.error("Fetch enrollments error:", error);
+    res.status(500).json({
+      message: "Failed to fetch enrollments",
+    });
   }
 };
-

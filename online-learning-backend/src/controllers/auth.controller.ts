@@ -5,128 +5,51 @@ import { User } from "../models/user.model";
 import { sendEmail } from "../utils/sendEmail";
 
 const generateToken = (userId: string) =>
-  jwt.sign(
-    { userId },
-    process.env.JWT_SECRET!,
-    { expiresIn: "7d" }
-  );
+  jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+
+
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, role } = req.body;
 
-   
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        message: "Name, email and password are required",
-      });
-    }
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "All fields required" });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        message: "User already exists",
-      });
-    }
+    const existing = await User.findOne({ email });
+    if (existing)
+      return res.status(400).json({ message: "User already exists" });
 
-    const verificationToken = crypto
-      .randomBytes(32)
-      .toString("hex");
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
     await User.create({
       name,
       email,
       password,
-      role: role === "INSTRUCTOR" ? "INSTRUCTOR" : "STUDENT",
+      role,
       provider: "LOCAL",
       isVerified: false,
       verificationToken,
-      verificationTokenExpires: new Date(
-        Date.now() + 24 * 60 * 60 * 1000
-      ),
+      verificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
-    try {
-      const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
 
-      await sendEmail(
-        email,
-        "Verify your email",
-        `<p>Click to verify:</p><a href="${verifyUrl}">${verifyUrl}</a>`
-      );
-    } catch (emailErr) {
-      console.error("Email error (ignored):", emailErr);
-    }
+    await sendEmail(
+      email,
+      "Verify your email",
+      `<p>Click below:</p><a href="${verifyUrl}">${verifyUrl}</a>`
+    );
 
     return res.status(201).json({
-      message:
-        "Registration successful. Please verify your email.",
+      message: "Verification email sent",
     });
   } catch (err) {
-    console.error("REGISTER FAILED:", err);
-    return res.status(500).json({
-      message: "Registration failed",
-    });
+    console.error(err);
+    res.status(500).json({ message: "Signup failed" });
   }
 };
 
-export const login = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password required" });
-    }
-
-    const user = await User.findOne({ email }).select(
-      "+password"
-    );
-
-    if (!user) {
-      return res
-        .status(401)
-        .json({ message: "Invalid credentials" });
-    }
-
-    if (user.provider === "GOOGLE") {
-      return res.status(400).json({
-        message: "Please login using Google",
-      });
-    }
-
-    if (!user.isVerified) {
-      return res.status(403).json({
-        message: "Please verify your email first",
-      });
-    }
-
-    const isMatch = await user.comparePassword(
-      password
-    );
-
-    if (!isMatch) {
-      return res
-        .status(401)
-        .json({ message: "Invalid credentials" });
-    }
-
-    const token = generateToken(user._id.toString());
-
-    return res.status(200).json({
-      token,
-      user,
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    return res
-      .status(500)
-      .json({ message: "Login failed" });
-  }
-};
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.params;
@@ -136,41 +59,38 @@ export const verifyEmail = async (req: Request, res: Response) => {
       verificationTokenExpires: { $gt: new Date() },
     });
 
-    if (user) {
-      user.isVerified = true;
-      user.verificationToken = undefined;
-      user.verificationTokenExpires = undefined;
-
-      await user.save();
-
-      return res.json({
-        message: "Email verified successfully",
-        alreadyVerified: false,
-      });
-    }
-
-    const alreadyVerifiedUser = await User.findOne({
-      isVerified: true,
-    });
-
-    if (alreadyVerifiedUser) {
+    if (!user) {
       return res.json({
         message: "Email already verified",
         alreadyVerified: true,
       });
     }
 
-    return res.status(400).json({
-      message: "Invalid or expired verification link",
-    });
-  } catch (error) {
-    console.error("Verify email error:", error);
-    return res.status(500).json({
-      message: "Verification failed",
-    });
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Email verified", alreadyVerified: false });
+  } catch {
+    res.status(500).json({ message: "Verification failed" });
   }
 };
 
 
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
+  if (!user.isVerified)
+    return res.status(403).json({ message: "Verify email first" });
+
+  const match = await user.comparePassword(password);
+  if (!match) return res.status(401).json({ message: "Invalid credentials" });
+
+  const token = generateToken(user._id.toString());
+
+  res.json({ token, user });
+};

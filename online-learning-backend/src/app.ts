@@ -1,3 +1,4 @@
+// src/app.ts
 import express from "express";
 import cors from "cors";
 
@@ -6,35 +7,26 @@ import courseRoutes from "./routes/course.routes";
 import moduleRoutes from "./routes/module.routes";
 import lessonRoutes from "./routes/lesson.routes";
 import progressRoutes from "./routes/progress.routes";
-import quizRoutes from "./routes/quiz.routes";
-import assignmentRoutes from "./routes/assignment.routes";
 
 const app = express();
 
-
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173"],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-app.options("*", cors());
-
 app.use(express.json());
 
-app.use("/auth", authRoutes);
-app.use("/courses", courseRoutes);
-app.use("/modules", moduleRoutes);
-app.use("/lessons", lessonRoutes);
-app.use("/progress", progressRoutes);
-app.use("/quizzes", quizRoutes);
-app.use("/assignments", assignmentRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/modules", moduleRoutes);
+app.use("/api/lessons", lessonRoutes);
+app.use("/api/progress", progressRoutes);
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "OK" });
+  res.json({ status: "OK" });
 });
 
 export default app;

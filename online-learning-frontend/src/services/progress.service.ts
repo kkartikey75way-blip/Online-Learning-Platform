@@ -10,8 +10,3 @@ export const markLessonComplete = async (
   });
   return res.data;
 };
-
-export const getProgress = async (courseId: string) => {
-  const res = await api.get(`/progress/${courseId}`);
-  return res.data;
-};

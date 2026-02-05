@@ -19,9 +19,9 @@ const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
 const InstructorDashboard = lazy(() => import("../pages/InstructorDashboard"));
 const Unauthorized = lazy(() => import("../pages/Unauthorized"));
 const QuizPage = lazy(() => import("../pages/QuizPage"));
-const AssignmentUpload = lazy(() => import("../pages/AssignmentUpload"));
-const CertificatePage = lazy(() => import("../pages/CertificatePage"));
-
+const AssignmentUpload = lazy(() => import("../pages/AssignmentPage"));
+const CertificatePage = lazy(() => import("../pages/Certificate"));
+const CreateCourse = lazy(() => import("../pages/CreateCourse"))
 
 // Loader 
 const Loader = () => (
@@ -85,7 +85,16 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
-
+      {
+        path: "/instructor/create-course",
+        element: (
+          <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["INSTRUCTOR"]}>
+              <CreateCourse />
+            </RoleProtectedRoute>
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "/courses/:id",
         element: (
@@ -170,8 +179,5 @@ export const router = createBrowserRouter([
 
     ],
   },
-  {
-    path: "*",
-    element: <Navigate to="/" replace />,
-  },
+
 ]);

@@ -16,21 +16,13 @@ export interface IUser extends Document {
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, unique: true, required: true },
     password: { type: String, select: false },
-    role: {
-      type: String,
-      enum: ["STUDENT", "INSTRUCTOR"],
-      default: "STUDENT",
-    },
-    provider: {
-      type: String,
-      enum: ["LOCAL", "GOOGLE"],
-      default: "LOCAL",
-    },
+    role: { type: String, enum: ["STUDENT", "INSTRUCTOR"], default: "STUDENT" },
+    provider: { type: String, enum: ["LOCAL", "GOOGLE"], default: "LOCAL" },
     isVerified: { type: Boolean, default: false },
-    verificationToken: { type: String },
-    verificationTokenExpires: { type: Date },
+    verificationToken: String,
+    verificationTokenExpires: Date,
   },
   { timestamps: true }
 );
@@ -40,9 +32,7 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-userSchema.methods.comparePassword = function (
-  password: string
-) {
+userSchema.methods.comparePassword = function (password: string) {
   return bcrypt.compare(password, this.password!);
 };
 

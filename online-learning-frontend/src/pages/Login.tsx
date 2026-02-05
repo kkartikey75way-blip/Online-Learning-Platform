@@ -25,10 +25,36 @@ export default function Login() {
         password,
       });
 
+      // ✅ SAVE TOKEN (THIS WAS MISSING)
+      localStorage.setItem("token", res.data.token);
+
+      // ✅ UPDATE REDUX
+      dispatch(loginSuccess(res.data));
+
+      // ✅ ROLE REDIRECT
+      redirectByRole(res.data.user.role);
+    } catch (error: any) {
+      Swal.fire(
+        "Login failed",
+        error?.response?.data?.message || "Invalid credentials",
+        "error"
+      );
+    }
+  };
+
+  const handleGoogleLogin = async (credential: string) => {
+    try {
+      const res = await api.post("/auth/google", {
+        idToken: credential,
+      });
+
+      // ✅ SAVE TOKEN
+      localStorage.setItem("token", res.data.token);
+
       dispatch(loginSuccess(res.data));
       redirectByRole(res.data.user.role);
     } catch {
-      Swal.fire("Login failed", "Invalid credentials", "error");
+      Swal.fire("Google login failed", "", "error");
     }
   };
 
@@ -65,21 +91,12 @@ export default function Login() {
 
         <div className="flex justify-center">
           <GoogleLogin
-            onSuccess={(res) => {
-              if (!res.credential) return;
-
-              api
-                .post("/auth/google", {
-                  idToken: res.credential,
-                })
-                .then((r) => {
-                  dispatch(loginSuccess(r.data));
-                  redirectByRole(r.data.user.role);
-                })
-                .catch(() =>
-                  Swal.fire("Google login failed", "", "error")
-                );
-            }}
+            onSuccess={(res) =>
+              res.credential && handleGoogleLogin(res.credential)
+            }
+            onError={() =>
+              Swal.fire("Google login failed", "", "error")
+            }
           />
         </div>
       </div>

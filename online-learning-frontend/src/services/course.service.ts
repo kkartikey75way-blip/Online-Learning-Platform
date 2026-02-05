@@ -10,11 +10,12 @@ export const getCourseById = async (id: string) => {
   return res.data;
 };
 
-export const enrollCourse = async (courseId: string) => {
-  const res = await api.post(`/courses/${courseId}/enroll`);
+export const enrollInCourse = async (courseId: string) => {
+  const res = await api.post(`/courses/enroll/${courseId}`);
   return res.data;
 };
+
 export const getMyEnrolledCourses = async () => {
-  const res = await api.get("/courses/enrolled");
+  const res = await api.get("/courses/my");
   return res.data;
 };

@@ -1,16 +1,17 @@
 import { Response } from "express";
-import type { AuthRequest } from "../types/auth-request";
-import { Progress } from "../models/progress.model";
 import { Lesson } from "../models/lesson.model";
-import { Module } from "../models/module.model";
+import { Progress } from "../models/progress.model";
+import type { AuthRequest } from "../types/auth-request";
 
-export const markComplete = async (
+export const markLessonComplete = async (
   req: AuthRequest,
   res: Response
 ) => {
-  if (!req.user) return res.sendStatus(401);
+  const { lessonId, courseId } = req.body;
 
-  const { courseId, lessonId } = req.body;
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
   let progress = await Progress.findOne({
     user: req.user._id,
@@ -25,25 +26,23 @@ export const markComplete = async (
     });
   }
 
-  if (!progress.completedLessons.includes(lessonId)) {
+  if (
+    !progress.completedLessons.some(
+      (id) => id.toString() === lessonId
+    )
+  ) {
     progress.completedLessons.push(lessonId);
   }
 
-  // ✅ count lessons ONLY for this course
-  const modules = await Module.find({ course: courseId });
-  const moduleIds = modules.map((m) => m._id);
-
   const totalLessons = await Lesson.countDocuments({
-    module: { $in: moduleIds },
+    course: courseId,
   });
 
-  const completedCount = progress.completedLessons.length;
-
-  progress.progressPercent = Math.round(
-    (completedCount / totalLessons) * 100
+  progress.percentage = Math.round(
+    (progress.completedLessons.length / totalLessons) * 100
   );
 
-  progress.completed = progress.progressPercent === 100;
+  progress.completed = progress.percentage === 100;
 
   await progress.save();
 

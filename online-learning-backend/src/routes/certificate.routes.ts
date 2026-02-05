@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
-import { markLessonComplete } from "../controllers/progress.controller";
+import { getMyCertificates } from "../controllers/certificate.controller";
 
 const router = Router();
 
-router.post("/complete", authenticate, markLessonComplete);
+router.get("/", authenticate, getMyCertificates);
 
 export default router;

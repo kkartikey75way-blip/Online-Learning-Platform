@@ -1,31 +1,24 @@
-import { Response } from "express";
-import type { AuthRequest } from "../types/auth-request";
+import { Request, Response } from "express";
 import { Quiz } from "../models/quiz.model";
-import { Question } from "../models/question.model";
 
-export const createQuiz = async (
-  req: AuthRequest,
-  res: Response
-) => {
-  const quiz = await Quiz.create(req.body);
+export const createQuiz = async (req: Request, res: Response) => {
+  const { lessonId, questions } = req.body;
+
+  const quiz = await Quiz.create({
+    lesson: lessonId,
+    questions,
+  });
+
   res.status(201).json(quiz);
 };
 
-export const submitQuiz = async (
-  req: AuthRequest,
+export const getQuizByLesson = async (
+  req: Request,
   res: Response
 ) => {
-  const { quizId, answers } = req.body;
-
-  const questions = await Question.find({ quiz: quizId });
-
-  let score = 0;
-  questions.forEach((q, i) => {
-    if (q.correctAnswer === answers[i]) score++;
+  const quiz = await Quiz.findOne({
+    lesson: req.params.lessonId,
   });
 
-  res.json({
-    score,
-    total: questions.length,
-  });
+  res.json(quiz);
 };

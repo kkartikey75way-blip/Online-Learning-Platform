@@ -1,18 +1,29 @@
 import { Response } from "express";
 import type { AuthRequest } from "../types/auth-request";
-import { Submission } from "../models/submission.model";
+import { Assignment } from "../models/assignment.model";
 
 export const submitAssignment = async (
   req: AuthRequest,
   res: Response
 ) => {
-  if (!req.user) return res.sendStatus(401);
+  const { assignmentId } = req.params;
 
-  const submission = await Submission.create({
-    assignment: req.body.assignmentId,
-    student: req.user._id,
-    fileUrl: req.file?.path,
-  });
+  if (!req.user || !req.file) {
+    return res.status(400).json({ message: "Invalid submission" });
+  }
 
-  res.status(201).json(submission);
+  const assignment = await Assignment.findByIdAndUpdate(
+    assignmentId,
+    {
+      $push: {
+        submissions: {
+          student: req.user._id,
+          fileUrl: (req.file as any).path,
+        },
+      },
+    },
+    { new: true }
+  );
+
+  res.json(assignment);
 };
