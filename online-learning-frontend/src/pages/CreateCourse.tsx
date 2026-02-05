@@ -17,20 +17,24 @@ export default function CreateCourse() {
 
   const handleCreate = async () => {
     try {
-      await api.post("/courses", form);
+      const res = await api.post("/courses", form);
+
+      const courseId = res.data._id;
 
       await Swal.fire({
         icon: "success",
-        title: "Course created",
-        text: "You can now add modules and lessons",
+        title: "Course created 🎉",
+        text: "Now add modules and lessons",
         confirmButtonColor: "#14b8a6",
       });
 
-      navigate("/instructor");
+      // ✅ REDIRECT TO COURSE BUILDER
+      navigate(`/instructor/course/${courseId}/builder`);
     } catch (error: any) {
       Swal.fire(
         "Failed",
-        error?.response?.data?.message || "Course creation failed",
+        error?.response?.data?.message ||
+          "Course creation failed",
         "error"
       );
     }
@@ -97,7 +101,7 @@ export default function CreateCourse() {
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={form.dripEnabled}
@@ -117,6 +121,7 @@ export default function CreateCourse() {
           >
             Create Course
           </button>
+          
         </div>
       </div>
     </section>

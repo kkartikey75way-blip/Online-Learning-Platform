@@ -9,6 +9,7 @@ export interface ICourse extends Document {
   capacity: number;
   enrolledCount: number;
   isPublished: boolean;
+  dripEnabled: boolean;
 }
 
 const courseSchema = new Schema<ICourse>(
@@ -28,6 +29,7 @@ const courseSchema = new Schema<ICourse>(
     enrolledCount: { type: Number, default: 0 },
 
     isPublished: { type: Boolean, default: true },
+    dripEnabled: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../services/api";
-import {
-  HiOutlineBookOpen,
-  HiOutlineChartBar,
-} from "react-icons/hi2";
+import { getMyEnrolledCourses } from "../services/course.service";
+import { HiOutlineAcademicCap } from "react-icons/hi2";
 
 interface Enrollment {
   _id: string;
-  progressPercent: number;
   course: {
     _id: string;
     title: string;
@@ -16,6 +12,7 @@ interface Enrollment {
       name: string;
     };
   };
+  progressPercent?: number;
 }
 
 export default function StudentDashboard() {
@@ -24,78 +21,84 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api
-      .get("/courses/my-enrollments")
-      .then((res) => setEnrollments(res.data))
+    getMyEnrolledCourses()
+      .then((res) => setEnrollments(res))
       .finally(() => setLoading(false));
   }, []);
 
+  if (loading) {
+    return (
+      <div className="p-10">Loading your courses...</div>
+    );
+  }
+
   return (
     <section className="min-h-screen bg-[#f9f7f2]">
-      <div className="max-w-7xl mx-auto px-8 py-12">
+      <div className="max-w-6xl mx-auto px-8 py-14">
 
         {/* HEADER */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-indigo-900">
             Student Dashboard
           </h1>
-          <p className="text-gray-600 mt-1">
-            Continue learning where you left off
+          <p className="text-gray-600">
+            Track your learning progress
           </p>
         </div>
 
-        {loading ? (
-          <p className="text-gray-600">Loading your courses…</p>
-        ) : enrollments.length === 0 ? (
-          <div className="bg-white p-6 rounded-xl shadow text-gray-600">
-            You are not enrolled in any courses yet.
+        {/* EMPTY STATE */}
+        {enrollments.length === 0 ? (
+          <div className="bg-white rounded-xl p-10 shadow text-center">
+            <HiOutlineAcademicCap className="text-4xl text-teal-500 mx-auto mb-4" />
+            <p className="text-gray-600 mb-4">
+              You haven’t enrolled in any courses yet
+            </p>
+            <button
+              onClick={() => navigate("/courses")}
+              className="bg-teal-500 text-white px-6 py-2 rounded hover:bg-teal-600"
+            >
+              Browse Courses
+            </button>
           </div>
         ) : (
+          /* COURSE GRID */
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {enrollments.map((enroll) => (
               <div
                 key={enroll._id}
-                className="bg-white rounded-xl shadow p-6 flex flex-col justify-between"
+                className="bg-white rounded-xl p-6 shadow"
               >
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-indigo-900">
-                    <HiOutlineBookOpen />
-                    <h2 className="font-semibold text-lg">
-                      {enroll.course.title}
-                    </h2>
-                  </div>
+                <h2 className="text-lg font-semibold text-indigo-900 mb-1">
+                  {enroll.course.title}
+                </h2>
 
-                  <p className="text-sm text-gray-500 mb-3">
-                    Instructor: {enroll.course.instructor.name}
+                <p className="text-sm text-gray-500 mb-4">
+                  Instructor: {enroll.course.instructor.name}
+                </p>
+
+                {/* PROGRESS BAR */}
+                <div className="mb-4">
+                  <div className="w-full bg-gray-200 h-2 rounded">
+                    <div
+                      className="bg-teal-500 h-2 rounded"
+                      style={{
+                        width: `${enroll.progressPercent ?? 0}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {enroll.progressPercent ?? 0}% completed
                   </p>
-
-                  {/* PROGRESS */}
-                  <div className="mb-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                      <HiOutlineChartBar />
-                      Progress
-                    </div>
-                    <div className="w-full bg-gray-200 h-2 rounded">
-                      <div
-                        className="bg-teal-500 h-2 rounded transition-all"
-                        style={{
-                          width: `${enroll.progressPercent}%`,
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {enroll.progressPercent}% completed
-                    </p>
-                  </div>
                 </div>
 
+                {/* ACTIONS */}
                 <button
                   onClick={() =>
                     navigate(`/courses/${enroll.course._id}`)
                   }
-                  className="mt-6 text-teal-600 hover:underline text-sm cursor-pointer"
+                  className="w-full text-sm bg-indigo-900 text-white py-2 rounded hover:bg-indigo-800"
                 >
-                  Continue learning →
+                  Continue Learning →
                 </button>
               </div>
             ))}

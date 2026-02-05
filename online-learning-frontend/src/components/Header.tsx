@@ -1,87 +1,145 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { FiLogIn, FiUserPlus } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../store/store";
+import { logout } from "../store/reducers/authReducer";
+import {
+  FiLogOut,
+  FiUser,
+  FiBookOpen,
+  FiPlus,
+} from "react-icons/fi";
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   const isActive = (path: string) =>
-    location.pathname.startsWith(path);
+    location.pathname === path;
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
 
   return (
     <header className="w-full bg-[#f9f7f2] border-b border-gray-200">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-6">
+      <div className="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
 
         {/* LOGO */}
         <button
           onClick={() => navigate("/")}
-          className="cursor-pointer text-2xl font-bold text-indigo-900"
+          className="text-2xl font-bold text-indigo-900 cursor-pointer"
         >
           Inter<span className="text-teal-500">.</span>
         </button>
 
         {/* NAV */}
-        <nav className="hidden md:flex gap-8 text-sm font-medium text-indigo-900">
-          <button
-            onClick={() => navigate("/about")}
-            className={`hover:text-teal-500 ${isActive("/about") && "text-teal-500"
-              }`}
-          >
-            About
-          </button>
+        <nav className="flex items-center gap-6 text-sm font-medium">
 
-          <button
-            onClick={() => navigate("/courses")}
-            className={`cursor-pointer hover:text-teal-500 ${isActive("/courses") && "text-teal-500"
-              }`}
-          >
-            Courses
-          </button>
+          {/* PUBLIC */}
+          {!isAuthenticated && (
+            <>
+              <NavBtn
+                label="Courses"
+                onClick={() => navigate("/courses")}
+                active={isActive("/courses")}
+              />
+              <NavBtn
+                label="Login"
+                onClick={() => navigate("/login")}
+              />
+              <NavBtn
+                label="Signup"
+                onClick={() => navigate("/signup")}
+              />
+            </>
+          )}
 
+          {/* STUDENT */}
+          {isAuthenticated &&
+            user?.role === "STUDENT" && (
+              <>
+                <NavBtn
+                  label="Courses"
+                  icon={<FiBookOpen />}
+                  onClick={() => navigate("/courses")}
+                />
+                <NavBtn
+                  label="Dashboard"
+                  icon={<FiUser />}
+                  onClick={() => navigate("/student")}
+                />
+                <NavBtn
+                  label="Certificates"
+                  onClick={() =>
+                    navigate("/certificates")
+                  }
+                />
+              </>
+            )}
 
-          <button
-            onClick={() => navigate("/team")}
-            className="hover:text-teal-500"
-          >
-            Team
-          </button>
+          {/* INSTRUCTOR */}
+          {isAuthenticated &&
+            user?.role === "INSTRUCTOR" && (
+              <>
+                <NavBtn
+                  label="Dashboard"
+                  icon={<FiUser />}
+                  onClick={() => navigate("/instructor")}
+                />
+                <NavBtn
+                  label="Create Course"
+                  icon={<FiPlus />}
+                  onClick={() =>
+                    navigate("/instructor/create-course")
+                  }
+                />
+              </>
+            )}
 
-          <button
-            onClick={() => navigate("/pricing")}
-            className="hover:text-teal-500"
-          >
-            Pricing
-          </button>
-
-          <button
-            onClick={() => navigate("/contact")}
-            className="hover:text-teal-500"
-          >
-            Contact us
-          </button>
+          {/* LOGOUT */}
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1 text-red-600 hover:text-red-700 cursor-pointer"
+            >
+              <FiLogOut />
+              Logout
+            </button>
+          )}
         </nav>
-
-        {/* AUTH ACTIONS */}
-        <div className="flex items-center gap-3">
-          {/* Login */}
-          <button
-            onClick={() => navigate("/login")}
-            className="cursor-pointer flex items-center gap-2 text-sm font-medium text-indigo-900 hover:text-teal-500 transition"
-          >
-            <FiLogIn />
-            Login
-          </button>
-
-          {/* Signup */}
-          <button
-            onClick={() => navigate("/signup")}
-            className="cursor-pointer flex items-center gap-2 bg-teal-500 hover:bg-teal-600 transition text-white px-5 py-2 rounded-md text-sm font-medium"
-          >
-            <FiUserPlus />
-            Sign up
-          </button>
-        </div>
       </div>
     </header>
+  );
+}
+
+//SMALL COMPONENT
+
+function NavBtn({
+  label,
+  onClick,
+  active,
+  icon,
+}: {
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1 cursor-pointer hover:text-teal-500 ${
+        active ? "text-teal-500" : "text-indigo-900"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

@@ -3,10 +3,9 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface ILesson extends Document {
   title: string;
   module: mongoose.Types.ObjectId;
-  videoUrl?: string;
   content?: string;
+  videoUrl?: string;
   order: number;
-  dripAfterDays: number; 
 }
 
 const lessonSchema = new Schema<ILesson>(
@@ -17,10 +16,9 @@ const lessonSchema = new Schema<ILesson>(
       ref: "Module",
       required: true,
     },
-    videoUrl: String,
     content: String,
+    videoUrl: String, 
     order: { type: Number, default: 0 },
-    dripAfterDays: { type: Number, default: 0 }, 
   },
   { timestamps: true }
 );

@@ -19,7 +19,4 @@ const moduleSchema = new Schema<IModule>(
   { timestamps: true }
 );
 
-export const Module = mongoose.model<IModule>(
-  "Module",
-  moduleSchema
-);
+export const Module = mongoose.model<IModule>("Module", moduleSchema);

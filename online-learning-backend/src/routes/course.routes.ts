@@ -5,16 +5,27 @@ import {
   getCourseById,
   enrollInCourse,
   getMyEnrolledCourses,
+  publishCourse,
 } from "../controllers/course.controller";
 import { authenticate } from "../middleware/auth.middleware";
+import { instructorOnly } from "../middleware/role.middleware";
 
 const router = Router();
 
-router.get("/", getAllCourses);
-router.get("/:id", getCourseById);
-
-router.post("/", authenticate, createCourse);
-router.post("/:id/enroll", authenticate, enrollInCourse);
 router.get("/me/enrolled", authenticate, getMyEnrolledCourses);
+
+router.patch(
+  "/:id/publish",
+  authenticate,
+  instructorOnly,
+  publishCourse
+);
+
+router.post("/:id/enroll", authenticate, enrollInCourse);
+
+router.get("/:id", getCourseById);
+router.get("/", getAllCourses);
+router.post("/", authenticate, createCourse);
+
 
 export default router;

@@ -1,37 +1,41 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
 import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
-
 import ProtectedRoute from "./ProtectedRoute";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 import PublicRoute from "./PublicRoute";
 
-/* Lazy pages */
+const Loader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    Loading...
+  </div>
+);
+
+// Public
 const Home = lazy(() => import("../pages/Home"));
 const Login = lazy(() => import("../pages/Login"));
 const Signup = lazy(() => import("../pages/Signup"));
 const VerifyEmail = lazy(() => import("../pages/VerifyEmail"));
 const CourseList = lazy(() => import("../pages/CourseList"));
 const CourseDetails = lazy(() => import("../pages/CourseDetails"));
-const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
-const InstructorDashboard = lazy(() => import("../pages/InstructorDashboard"));
-const Unauthorized = lazy(() => import("../pages/Unauthorized"));
-const QuizPage = lazy(() => import("../pages/QuizPage"));
-const AssignmentUpload = lazy(() => import("../pages/AssignmentPage"));
-const CertificatePage = lazy(() => import("../pages/Certificate"));
-const CreateCourse = lazy(() => import("../pages/CreateCourse"))
 
-// Loader 
-const Loader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <p className="text-lg animate-pulse">Loading...</p>
-  </div>
-);
+
+
+// Student
+const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
+const Certificates = lazy(() => import("../pages/Certificate"));
+const QuizPage = lazy(() => import("../pages/QuizPage"));
+const AssignmentPage = lazy(() => import("../pages/AssignmentPage"));
+
+// Instructor
+const InstructorDashboard = lazy(() => import("../pages/InstructorDashboard"));
+const CreateCourse = lazy(() => import("../pages/CreateCourse"));
+const InstructorCourseBuilder = lazy(() => import("../pages/InstructorCourseBuilder"));
 
 export const router = createBrowserRouter([
-
+  // AUTH
   {
     element: <AuthLayout />,
     children: [
@@ -57,6 +61,8 @@ export const router = createBrowserRouter([
       },
     ],
   },
+
+  // VERIFY EMAIL
   {
     path: "/verify-email/:token",
     element: (
@@ -65,24 +71,60 @@ export const router = createBrowserRouter([
       </Suspense>
     ),
   },
+
+  // MAIN
   {
     element: <MainLayout />,
     children: [
+      { path: "/", element: <Home /> },
+      { path: "/courses", element: <CourseList /> },
+      { path: "/courses/:id", element: <CourseDetails /> },
+
+      // STUDENT
       {
-        path: "/",
+        path: "/student",
         element: (
-          <Suspense fallback={<Loader />}>
-            <Home />
-          </Suspense>
+          <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
+              <StudentDashboard />
+            </RoleProtectedRoute>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/certificates",
+        element: (
+          <ProtectedRoute>
+            <Certificates />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/quiz/:lessonId",
+        element: (
+          <ProtectedRoute>
+            <QuizPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/assignment/:assignmentId",
+        element: (
+          <ProtectedRoute>
+            <AssignmentPage />
+          </ProtectedRoute>
         ),
       },
 
+      // INSTRUCTOR
       {
-        path: "/courses",
+        path: "/instructor",
         element: (
-          <Suspense fallback={<Loader />}>
-            <CourseList />
-          </Suspense>
+          <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["INSTRUCTOR"]}>
+              <InstructorDashboard />
+            </RoleProtectedRoute>
+          </ProtectedRoute>
         ),
       },
       {
@@ -96,81 +138,12 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/courses/:id",
-        element: (
-          <Suspense fallback={<Loader />}>
-            <CourseDetails />
-          </Suspense>
-        ),
-      },
-
-      {
-        path: "/student",
-        element: (
-          <ProtectedRoute>
-            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
-              <Suspense fallback={<Loader />}>
-                <StudentDashboard />
-              </Suspense>
-            </RoleProtectedRoute>
-          </ProtectedRoute>
-        ),
-      },
-
-      {
-        path: "/instructor",
+        path: "/instructor/course/:courseId/builder",
         element: (
           <ProtectedRoute>
             <RoleProtectedRoute allowedRoles={["INSTRUCTOR"]}>
               <Suspense fallback={<Loader />}>
-                <InstructorDashboard />
-              </Suspense>
-            </RoleProtectedRoute>
-          </ProtectedRoute>
-        ),
-      },
-
-      {
-        path: "/unauthorized",
-        element: (
-          <Suspense fallback={<Loader />}>
-            <Unauthorized />
-          </Suspense>
-        ),
-      },
-      {
-        path: "/quiz/:quizId",
-        element: (
-          <ProtectedRoute>
-            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
-              <Suspense fallback={<Loader />}>
-                <QuizPage />
-              </Suspense>
-            </RoleProtectedRoute>
-          </ProtectedRoute>
-        ),
-      },
-
-      {
-        path: "/assignment/:assignmentId",
-        element: (
-          <ProtectedRoute>
-            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
-              <Suspense fallback={<Loader />}>
-                <AssignmentUpload />
-              </Suspense>
-            </RoleProtectedRoute>
-          </ProtectedRoute>
-        ),
-      },
-
-      {
-        path: "/certificate/:courseId",
-        element: (
-          <ProtectedRoute>
-            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
-              <Suspense fallback={<Loader />}>
-                <CertificatePage />
+                <InstructorCourseBuilder />
               </Suspense>
             </RoleProtectedRoute>
           </ProtectedRoute>
@@ -179,5 +152,6 @@ export const router = createBrowserRouter([
 
     ],
   },
+
 
 ]);

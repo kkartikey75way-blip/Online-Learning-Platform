@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../services/api";
 import { markLessonComplete } from "../services/progress.service";
+
 import {
   HiOutlineCheckCircle,
   HiOutlinePlayCircle,
@@ -15,7 +16,7 @@ export default function CourseDetails() {
   const { id: courseId } = useParams<{ id: string }>();
 
   const [modules, setModules] = useState<Module[]>([]);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<number>(0);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function CourseDetails() {
 
     const loadCourse = async () => {
       try {
-        /* 1️⃣ Load progress */
+        /* 1️⃣ PROGRESS */
         const progressRes = await api.get(
           `/progress/course/${courseId}`
         );
@@ -36,7 +37,7 @@ export default function CourseDetails() {
         const unlockedLessons: string[] =
           progressRes.data.unlockedLessons;
 
-        /* 2️⃣ Load modules + lessons */
+        /* 2️⃣ MODULES */
         const modulesRes = await api.get(
           `/modules/course/${courseId}`
         );
@@ -68,10 +69,7 @@ export default function CourseDetails() {
 
         setModules(modulesWithLessons);
       } catch (error) {
-        console.error(
-          "Failed to load course content",
-          error
-        );
+        console.error("Course load failed", error);
       }
     };
 
@@ -129,12 +127,12 @@ export default function CourseDetails() {
 
         {/* MODULES */}
         {modules.map((mod) => (
-          <div key={mod._id} className="mb-10">
+          <div key={mod._id} className="mb-12">
             <h2 className="text-2xl font-semibold text-indigo-900 mb-4">
               {mod.title}
             </h2>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {mod.lessons.map((lesson) => {
                 const isDone = completed.has(
                   lesson._id
@@ -145,43 +143,65 @@ export default function CourseDetails() {
                 return (
                   <div
                     key={lesson._id}
-                    className={`flex items-center justify-between bg-white rounded-xl p-4 shadow-sm ${
+                    className={`bg-white rounded-xl p-5 shadow-sm ${
                       isLocked && "opacity-60"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      {isDone ? (
-                        <HiOutlineCheckCircle className="text-green-500 text-xl" />
-                      ) : isLocked ? (
-                        <HiOutlineLockClosed className="text-gray-400 text-xl" />
-                      ) : (
-                        <HiOutlinePlayCircle className="text-indigo-400 text-xl" />
+                    <div className="flex flex-col gap-4">
+
+                      {/* TITLE */}
+                      <div className="flex items-center gap-3">
+                        {isDone ? (
+                          <HiOutlineCheckCircle className="text-green-500 text-xl" />
+                        ) : isLocked ? (
+                          <HiOutlineLockClosed className="text-gray-400 text-xl" />
+                        ) : (
+                          <HiOutlinePlayCircle className="text-indigo-400 text-xl" />
+                        )}
+
+                        <span className="font-medium text-indigo-900">
+                          {lesson.title}
+                        </span>
+                      </div>
+
+                      {/* VIDEO */}
+                      {lesson.videoUrl && !isLocked && (
+                        <video
+                          src={lesson.videoUrl}
+                          controls
+                          preload="metadata"
+                          className="w-full rounded-lg border"
+                        />
                       )}
 
-                      <span className="font-medium text-indigo-900">
-                        {lesson.title}
-                      </span>
-                    </div>
+                      {/* LOCKED MESSAGE */}
+                      {lesson.videoUrl && isLocked && (
+                        <p className="text-sm text-gray-500 italic">
+                          Complete previous lessons to unlock
+                        </p>
+                      )}
 
-                    <button
-                      disabled={isDone || isLocked}
-                      onClick={() =>
-                        handleComplete(lesson._id)
-                      }
-                      className={`text-sm px-4 py-2 rounded-lg transition cursor-pointer ${
-                        isDone
-                          ? "bg-green-100 text-green-600 cursor-not-allowed"
+                      {/* ACTION */}
+                      <button
+                        disabled={isDone || isLocked}
+                        onClick={() =>
+                          handleComplete(lesson._id)
+                        }
+                        className={`self-end text-sm px-4 py-2 rounded-lg transition cursor-pointer ${
+                          isDone
+                            ? "bg-green-100 text-green-600 cursor-not-allowed"
+                            : isLocked
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : "bg-teal-500 hover:bg-teal-600 text-white"
+                        }`}
+                      >
+                        {isDone
+                          ? "Completed"
                           : isLocked
-                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          : "bg-teal-500 hover:bg-teal-600 text-white"
-                      }`}
-                    >
-                      {isDone
-                        ? "Completed"
-                        : isLocked
-                        ? "Locked"
-                        : "Mark Complete"}
-                    </button>
+                          ? "Locked"
+                          : "Mark Complete"}
+                      </button>
+                    </div>
                   </div>
                 );
               })}

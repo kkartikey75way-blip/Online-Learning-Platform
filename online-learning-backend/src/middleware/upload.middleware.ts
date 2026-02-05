@@ -1,14 +1,20 @@
 import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary";
+import type { Request } from "express";
 
-const storage = multer.diskStorage({
-  filename: (_req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (
+    _req: Request,
+    file: Express.Multer.File
+  ) => {
+    return {
+      folder: "online-learning/lessons",
+      resource_type: "video",
+      public_id: `${Date.now()}-${file.originalname}`,
+    };
   },
 });
 
-export const upload = multer({
-  storage,
-  limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB
-  },
-});
+export const upload = multer({ storage });

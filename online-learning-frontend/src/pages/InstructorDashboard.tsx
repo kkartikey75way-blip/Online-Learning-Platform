@@ -1,172 +1,159 @@
-import { ReactNode, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getInstructorStats } from "../services/instructor.service";
 import { api } from "../services/api";
-import {
-  HiOutlineBookOpen,
-  HiOutlineUsers,
-  HiOutlinePlus,
-} from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2"
 
-interface Course {
-  _id: string;
+interface CourseStat {
+  id: string;
   title: string;
-  category: string;
-  enrolledCount: number;
+  enrolled: number;
+  capacity: number;
+  completion: number;
   isPublished: boolean;
 }
 
 export default function InstructorDashboard() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api
-      .get("/courses/my-courses")
-      .then((res) => setCourses(res.data))
-      .finally(() => setLoading(false));
+    getInstructorStats().then(setStats);
   }, []);
 
+  const togglePublish = async (courseId: string) => {
+    try {
+      await api.patch(`/courses/${courseId}/publish`);
+
+      const updatedStats = await getInstructorStats();
+      setStats(updatedStats);
+    } catch {
+      alert("Failed to update publish status");
+    }
+  };
+
+  if (!stats) {
+    return <div className="p-10">Loading dashboard...</div>;
+  }
+
   return (
-    <section className="min-h-screen bg-[#f9f7f2]">
-      <div className="max-w-7xl mx-auto px-8 py-12">
+    <div className="p-10 bg-[#f9f7f2] min-h-screen">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-indigo-900">
+          Instructor Dashboard
+        </h1>
 
-        {/* HEADER */}
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-3xl font-bold text-indigo-900">
-              Instructor Dashboard
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Manage your courses and students
-            </p>
-          </div>
+        <button
+          onClick={() => navigate("/instructor/create-course")}
+          className="bg-teal-500 text-white px-4 py-2 rounded cursor-pointer"
+        >
+          Create Course
+        </button>
+      </div>
 
-          <button
-            onClick={() => navigate("/instructor/create-course")}
-            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-5 py-3 rounded-lg font-medium cursor-pointer"
-          >
-            <HiOutlinePlus />
-            Create Course
-          </button>
-        </div>
+      {/* TOP STATS */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <StatCard label="Courses" value={stats.totalCourses} />
+        <StatCard label="Enrollments" value={stats.totalEnrollments} />
+        <StatCard label="Students" value={stats.totalStudents} />
+        <StatCard
+          label="Avg Completion"
+          value={`${stats.averageCompletion}%`}
+        />
+      </div>
 
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <StatCard
-            icon={<HiOutlineBookOpen />}
-            label="Total Courses"
-            value={courses.length}
-          />
-          <StatCard
-            icon={<HiOutlineUsers />}
-            label="Total Students"
-            value={courses.reduce(
-              (sum, c) => sum + c.enrolledCount,
-              0
-            )}
-          />
-          <StatCard
-            icon={<HiOutlineBookOpen />}
-            label="Published Courses"
-            value={courses.filter((c) => c.isPublished).length}
-          />
-        </div>
-
-        {/* COURSES */}
-        <h2 className="text-xl font-semibold text-indigo-900 mb-4">
-          Your Courses
+      {/* COURSE TABLE */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">
+          Course Performance
         </h2>
 
-        {loading ? (
-          <p className="text-gray-600">Loading courses…</p>
-        ) : courses.length === 0 ? (
-          <div className="bg-white p-6 rounded-xl shadow text-gray-600">
-            You haven’t created any courses yet.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <div
-                key={course._id}
-                className="bg-white rounded-xl shadow p-6 flex flex-col justify-between"
-              >
-                <div>
-                  <h3 className="font-semibold text-lg text-indigo-900">
-                    {course.title}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Category: {course.category}
-                  </p>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left border-b">
+              <th className="py-2">Course</th>
+              <th>Enrolled</th>
+              <th>Capacity</th>
+              <th>Completion</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-                  <p className="text-sm mt-2 text-gray-600">
-                    Students enrolled:{" "}
-                    <span className="font-medium">
-                      {course.enrolledCount}
-                    </span>
-                  </p>
+          <tbody>
+            {stats.courseStats.map((course: CourseStat) => (
+              <tr key={course.id} className="border-b last:border-none">
+                <td className="py-2 font-medium">{course.title}</td>
+                <td>{course.enrolled}</td>
+                <td>{course.capacity}</td>
+                <td>{course.completion}%</td>
 
-                  <p
-                    className={`inline-block mt-3 px-3 py-1 text-xs rounded-full ${
-                      course.isPublished
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
+                <td>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${course.isPublished
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                      }`}
                   >
-                    {course.isPublished
-                      ? "Published"
-                      : "Draft"}
-                  </p>
-                </div>
+                    {course.isPublished ? "Published" : "Draft"}
+                  </span>
+                </td>
 
-                <div className="mt-6 flex gap-4">
+
+                <td>
                   <button
                     onClick={() =>
-                      navigate(`/courses/${course._id}`)
+                      api
+                        .patch(`/courses/${course.id}/publish`)
+                        .then(() => {
+                          Swal.fire("Published", "Course is live", "success");
+                          setStats((prev: any) => ({
+                            ...prev,
+                            courseStats: prev.courseStats.map((c: any) =>
+                              c.id === course.id
+                                ? { ...c, isPublished: true }
+                                : c
+                            ),
+                          }));
+                        })
+                        .catch((err) =>
+                          Swal.fire(
+                            "Failed",
+                            err?.response?.data?.message || "Publish failed",
+                            "error"
+                          )
+                        )
                     }
-                    className="text-sm text-teal-600 hover:underline cursor-pointer"
+                    disabled={course.isPublished}
+                    className={`px-3 py-1 rounded text-sm ${course.isPublished
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-teal-500 text-white"
+                      }`}
                   >
-                    View
+                    {course.isPublished ? "Published" : "Publish"}
                   </button>
 
-                  <button
-                    onClick={() =>
-                      navigate(
-                        `/instructor/course/${course._id}`
-                      )
-                    }
-                    className="text-sm text-indigo-600 hover:underline cursor-pointer"
-                  >
-                    Manage
-                  </button>
-                </div>
-              </div>
+                </td>
+              </tr>
             ))}
-          </div>
-        )}
+          </tbody>
+        </table>
       </div>
-    </section>
+    </div>
   );
 }
 
 function StatCard({
-  icon,
   label,
   value,
 }: {
-  icon: ReactNode;
   label: string;
-  value: number;
+  value: any;
 }) {
   return (
-    <div className="bg-white rounded-xl p-6 shadow flex items-center gap-4">
-      <div className="text-teal-500 text-2xl">{icon}</div>
-      <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-xl font-bold text-indigo-900">
-          {value}
-        </p>
-      </div>
+    <div className="bg-white rounded-xl p-6 shadow">
+      <p className="text-sm text-gray-500 mb-1">{label}</p>
+      <p className="text-2xl font-bold text-indigo-900">{value}</p>
     </div>
   );
 }

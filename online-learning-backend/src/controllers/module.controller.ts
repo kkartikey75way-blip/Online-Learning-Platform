@@ -1,6 +1,6 @@
 import { Response } from "express";
-import type { AuthRequest } from "../types/auth-request";
 import { Module } from "../models/module.model";
+import type { AuthRequest } from "../types/auth-request";
 
 export const createModule = async (
   req: AuthRequest,
@@ -9,6 +9,10 @@ export const createModule = async (
   try {
     const { title, courseId, order } = req.body;
 
+    if (!req.user || req.user.role !== "INSTRUCTOR") {
+      return res.status(403).json({ message: "Instructor only" });
+    }
+
     const module = await Module.create({
       title,
       course: courseId,
@@ -16,7 +20,7 @@ export const createModule = async (
     });
 
     res.status(201).json(module);
-  } catch {
+  } catch (err) {
     res.status(500).json({ message: "Module creation failed" });
   }
 };

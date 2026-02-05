@@ -1,14 +1,15 @@
 import { Router } from "express";
-import {
-  createModule,
-  getModulesByCourse,
-} from "../controllers/module.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { instructorOnly } from "../middleware/role.middleware";
+import { getInstructorStats } from "../controllers/instructor.controller";
 
 const router = Router();
 
-router.post("/", authenticate, instructorOnly, createModule);
-router.get("/course/:courseId", getModulesByCourse);
+router.get(
+  "/stats",
+  authenticate,
+  instructorOnly,
+  getInstructorStats
+);
 
 export default router;

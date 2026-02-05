@@ -1,8 +1,10 @@
-import cloudinary from "../config/cloudinary";
-import type { AuthRequest } from "../types/auth-request";
 import { Response } from "express";
+import type { AuthRequest } from "../types/auth-request";
 import { Lesson } from "../models/lesson.model";
 
+/**
+ * CREATE LESSON (Instructor)
+ */
 export const createLesson = async (
   req: AuthRequest,
   res: Response
@@ -10,31 +12,58 @@ export const createLesson = async (
   try {
     const { title, moduleId, content, order } = req.body;
 
-    let videoUrl: string | undefined;
-
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(
-        req.file.path,
-        {
-          folder: "online-learning",
-          resource_type: "auto",
-        }
-      );
-
-      videoUrl = result.secure_url;
+    if (!req.user || req.user.role !== "INSTRUCTOR") {
+      return res.status(403).json({
+        message: "Only instructors can create lessons",
+      });
     }
+
+    if (!title || !moduleId) {
+      return res.status(400).json({
+        message: "Title and moduleId are required",
+      });
+    }
+
+    const videoUrl = req.file
+      ? (req.file as Express.Multer.File).path
+      : undefined;
 
     const lesson = await Lesson.create({
       title,
       module: moduleId,
       content,
-      order,
       videoUrl,
+      order: order ?? 0,
     });
 
     res.status(201).json(lesson);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Lesson creation failed" });
+    console.error("Create lesson error:", error);
+    res.status(500).json({
+      message: "Lesson creation failed",
+    });
+  }
+};
+
+/**
+ * ✅ GET LESSONS BY MODULE (Student + Instructor)
+ */
+export const getLessonsByModule = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const { moduleId } = req.params;
+
+    const lessons = await Lesson.find({
+      module: moduleId,
+    }).sort({ order: 1 });
+
+    res.json(lessons);
+  } catch (error) {
+    console.error("Fetch lessons error:", error);
+    res.status(500).json({
+      message: "Failed to fetch lessons",
+    });
   }
 };
