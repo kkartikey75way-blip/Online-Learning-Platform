@@ -18,6 +18,10 @@ const CourseDetails = lazy(() => import("../pages/CourseDetails"));
 const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
 const InstructorDashboard = lazy(() => import("../pages/InstructorDashboard"));
 const Unauthorized = lazy(() => import("../pages/Unauthorized"));
+const QuizPage = lazy(() => import("../pages/QuizPage"));
+const AssignmentUpload = lazy(() => import("../pages/AssignmentUpload"));
+const CertificatePage = lazy(() => import("../pages/CertificatePage"));
+
 
 // Loader 
 const Loader = () => (
@@ -125,6 +129,45 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+        path: "/quiz/:quizId",
+        element: (
+          <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
+              <Suspense fallback={<Loader />}>
+                <QuizPage />
+              </Suspense>
+            </RoleProtectedRoute>
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "/assignment/:assignmentId",
+        element: (
+          <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
+              <Suspense fallback={<Loader />}>
+                <AssignmentUpload />
+              </Suspense>
+            </RoleProtectedRoute>
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "/certificate/:courseId",
+        element: (
+          <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["STUDENT"]}>
+              <Suspense fallback={<Loader />}>
+                <CertificatePage />
+              </Suspense>
+            </RoleProtectedRoute>
+          </ProtectedRoute>
+        ),
+      },
+
     ],
   },
   {

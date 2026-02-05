@@ -1,17 +1,15 @@
 import { Router } from "express";
-import { createLesson } from "../controllers/lesson.controller";
+import { submitAssignment } from "../controllers/assignment.controller";
 import { authenticate } from "../middleware/auth.middleware";
-import { instructorOnly } from "../middleware/role.middleware";
 import { upload } from "../middleware/upload.middleware";
 
 const router = Router();
 
 router.post(
-  "/",
+  "/submit",
   authenticate,
-  instructorOnly,
-  upload.single("video"),
-  createLesson
+  upload.single("file"),
+  submitAssignment
 );
 
 export default router;

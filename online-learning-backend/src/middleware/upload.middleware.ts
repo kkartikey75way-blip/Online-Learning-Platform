@@ -1,25 +1,21 @@
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary";
+import type { UploadApiOptions } from "cloudinary";
+import type { Request } from "express";
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: async () => ({
-    folder: "lesson-videos",
-    resource_type: "video",
-  }),
+  params: async (
+    _req: Request,
+    file: Express.Multer.File
+  ): Promise<UploadApiOptions> => {
+    return {
+      folder: "online-learning",
+      resource_type: "auto", // image | video | pdf
+      public_id: `${Date.now()}-${file.originalname}`,
+    };
+  },
 });
 
-export const uploadVideo = multer({
-  storage,
-  limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB max
-  },
-  fileFilter: (_req, file, cb) => {
-    if (!file.mimetype.startsWith("video/")) {
-      cb(new Error("Only video files allowed"));
-    } else {
-      cb(null, true);
-    }
-  },
-});
+export const upload = multer({ storage });

@@ -9,47 +9,30 @@ export interface IUser extends Document {
   role: "STUDENT" | "INSTRUCTOR";
   provider: "GOOGLE" | "LOCAL";
   isVerified: boolean;
-
   verificationToken?: string;
   verificationTokenExpires?: Date;
-
   comparePassword(password: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-
-    password: {
-      type: String,
-      select: false,
-    },
-
+    email: { type: String, required: true, unique: true },
+    password: { type: String, select: false },
     avatar: String,
-
     role: {
       type: String,
       enum: ["STUDENT", "INSTRUCTOR"],
       default: "STUDENT",
     },
-
     provider: {
       type: String,
       enum: ["GOOGLE", "LOCAL"],
       default: "LOCAL",
     },
+    isVerified: { type: Boolean, default: false },
 
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-
+    // ✅ REQUIRED
     verificationToken: String,
     verificationTokenExpires: Date,
   },
@@ -64,11 +47,7 @@ userSchema.pre("save", async function () {
 userSchema.methods.comparePassword = function (
   enteredPassword: string
 ) {
-  if (!this.password) return false;
-  return bcrypt.compare(enteredPassword, this.password);
+  return bcrypt.compare(enteredPassword, this.password!);
 };
 
-export const User = mongoose.model<IUser>(
-  "User",
-  userSchema
-);
+export const User = mongoose.model<IUser>("User", userSchema);

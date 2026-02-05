@@ -6,7 +6,7 @@ export interface ILesson extends Document {
   videoUrl?: string;
   content?: string;
   order: number;
-  isDripLocked: boolean;
+  dripAfterDays: number; 
 }
 
 const lessonSchema = new Schema<ILesson>(
@@ -20,7 +20,7 @@ const lessonSchema = new Schema<ILesson>(
     videoUrl: String,
     content: String,
     order: { type: Number, default: 0 },
-    isDripLocked: { type: Boolean, default: false },
+    dripAfterDays: { type: Number, default: 0 }, 
   },
   { timestamps: true }
 );

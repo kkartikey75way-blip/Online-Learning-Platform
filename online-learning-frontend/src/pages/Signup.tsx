@@ -20,12 +20,12 @@ export default function Signup() {
 
   const register = async () => {
     try {
-      await api.post("/auth/register", form);
+      const res = await api.post("/auth/register", form);
 
       await Swal.fire({
         icon: "success",
-        title: "Verify your email 📩",
-        text: "A verification link has been sent to your email.",
+        title: "Verification email sent 📩",
+        text: "Please verify your email before logging in",
         confirmButtonColor: "#14b8a6",
       });
 
@@ -39,11 +39,12 @@ export default function Signup() {
     }
   };
 
+
   const handleGoogleSignup = async (credential: string) => {
     try {
       const res = await api.post("/auth/google", {
         idToken: credential,
-        role: form.role, 
+        role: form.role,
       });
 
       dispatch(loginSuccess(res.data));
@@ -77,11 +78,10 @@ export default function Signup() {
                   role: r as "STUDENT" | "INSTRUCTOR",
                 })
               }
-              className={`flex-1 py-2 rounded border text-sm font-medium cursor-pointer ${
-                form.role === r
+              className={`flex-1 py-2 rounded border text-sm font-medium cursor-pointer ${form.role === r
                   ? "bg-teal-500 text-white border-teal-500"
                   : "border-gray-300 text-gray-600"
-              }`}
+                }`}
             >
               {r === "STUDENT" ? "Student" : "Instructor"}
             </button>

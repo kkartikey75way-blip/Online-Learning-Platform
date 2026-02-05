@@ -1,28 +1,38 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import { connectDB } from "./config/db";
 
 import authRoutes from "./routes/auth.routes";
 import courseRoutes from "./routes/course.routes";
 import moduleRoutes from "./routes/module.routes";
 import lessonRoutes from "./routes/lesson.routes";
 import progressRoutes from "./routes/progress.routes";
-
-dotenv.config();
-connectDB();
+import quizRoutes from "./routes/quiz.routes";
+import assignmentRoutes from "./routes/assignment.routes";
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL }));
+/* ================== MIDDLEWARE ================== */
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
+/* ================== ROUTES ================== */
 app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/modules", moduleRoutes);
 app.use("/lessons", lessonRoutes);
 app.use("/progress", progressRoutes);
+app.use("/quizzes", quizRoutes);
+app.use("/assignments", assignmentRoutes);
 
-app.listen(process.env.PORT, () =>
-  console.log(`Server running on ${process.env.PORT}`)
-);
+/* ================== HEALTH CHECK ================== */
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "OK" });
+});
+
+export default app;

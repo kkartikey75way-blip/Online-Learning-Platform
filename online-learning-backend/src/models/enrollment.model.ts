@@ -18,15 +18,10 @@ const enrollmentSchema = new Schema<IEnrollment>(
       ref: "Course",
       required: true,
     },
-    enrolledAt: {
-      type: Date,
-      default: Date.now,
-    },
+    enrolledAt: { type: Date, default: Date.now }, 
   },
   { timestamps: true }
 );
-
-enrollmentSchema.index({ user: 1, course: 1 }, { unique: true });
 
 export const Enrollment = mongoose.model<IEnrollment>(
   "Enrollment",

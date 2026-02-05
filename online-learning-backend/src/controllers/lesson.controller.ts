@@ -7,11 +7,15 @@ export const createLesson = async (
   res: Response
 ) => {
   try {
-    const { title, moduleId, content, order } = req.body;
+    const {
+      title,
+      moduleId,
+      content,
+      order,
+      dripAfterDays = 0, 
+    } = req.body;
 
-    const videoUrl = req.file
-      ? (req.file as any).path // Cloudinary URL
-      : undefined;
+    const videoUrl = req.file?.path;
 
     const lesson = await Lesson.create({
       title,
@@ -19,10 +23,12 @@ export const createLesson = async (
       content,
       videoUrl,
       order,
+      dripAfterDays,
     });
 
     res.status(201).json(lesson);
   } catch (error) {
+    console.error(error);
     res
       .status(500)
       .json({ message: "Lesson creation failed" });

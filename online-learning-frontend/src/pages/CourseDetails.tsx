@@ -6,56 +6,83 @@ import {
   HiOutlineCheckCircle,
   HiOutlinePlayCircle,
   HiOutlineChartBar,
+  HiOutlineLockClosed,
 } from "react-icons/hi2";
 
-interface Lesson {
-  _id: string;
-  title: string;
-}
-
-interface Module {
-  _id: string;
-  title: string;
-  lessons: Lesson[];
-}
+import type { Module, Lesson } from "../types/course.types";
 
 export default function CourseDetails() {
-  const { id: courseId } = useParams();
+  const { id: courseId } = useParams<{ id: string }>();
+
   const [modules, setModules] = useState<Module[]>([]);
-  const [progress, setProgress] = useState<number>(0);
-  const [completed, setCompleted] = useState<Set<string>>(
-    new Set()
-  );
+  const [progress, setProgress] = useState(0);
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const loadContent = async () => {
-      const modulesRes = await api.get(
-        `/modules/course/${courseId}`
-      );
+    if (!courseId) return;
 
-      const modulesWithLessons = await Promise.all(
-        modulesRes.data.map(async (mod: any) => {
-          const lessonsRes = await api.get(
-            `/lessons/module/${mod._id}`
+    const loadCourse = async () => {
+      try {
+        /* 1️⃣ Load progress */
+        const progressRes = await api.get(
+          `/progress/course/${courseId}`
+        );
+
+        setProgress(progressRes.data.progressPercent);
+        setCompleted(
+          new Set(progressRes.data.completedLessons)
+        );
+
+        const unlockedLessons: string[] =
+          progressRes.data.unlockedLessons;
+
+        /* 2️⃣ Load modules + lessons */
+        const modulesRes = await api.get(
+          `/modules/course/${courseId}`
+        );
+
+        const modulesWithLessons: Module[] =
+          await Promise.all(
+            modulesRes.data.map(async (mod: Module) => {
+              const lessonsRes = await api.get(
+                `/lessons/module/${mod._id}`
+              );
+
+              const lessons: Lesson[] =
+                lessonsRes.data.map(
+                  (lesson: Lesson) => ({
+                    ...lesson,
+                    isLocked:
+                      !unlockedLessons.includes(
+                        lesson._id
+                      ),
+                  })
+                );
+
+              return {
+                ...mod,
+                lessons,
+              };
+            })
           );
-          return {
-            ...mod,
-            lessons: lessonsRes.data,
-          };
-        })
-      );
 
-      setModules(modulesWithLessons);
+        setModules(modulesWithLessons);
+      } catch (error) {
+        console.error(
+          "Failed to load course content",
+          error
+        );
+      }
     };
 
-    loadContent();
+    loadCourse();
   }, [courseId]);
 
   const handleComplete = async (lessonId: string) => {
-    if (completed.has(lessonId)) return;
+    if (!courseId || completed.has(lessonId)) return;
 
     const res = await markLessonComplete(
-      courseId!,
+      courseId,
       lessonId
     );
 
@@ -112,38 +139,47 @@ export default function CourseDetails() {
                 const isDone = completed.has(
                   lesson._id
                 );
+                const isLocked =
+                  lesson.isLocked && !isDone;
 
                 return (
                   <div
                     key={lesson._id}
                     className={`flex items-center justify-between bg-white rounded-xl p-4 shadow-sm ${
-                      isDone && "opacity-70"
+                      isLocked && "opacity-60"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       {isDone ? (
                         <HiOutlineCheckCircle className="text-green-500 text-xl" />
+                      ) : isLocked ? (
+                        <HiOutlineLockClosed className="text-gray-400 text-xl" />
                       ) : (
                         <HiOutlinePlayCircle className="text-indigo-400 text-xl" />
                       )}
+
                       <span className="font-medium text-indigo-900">
                         {lesson.title}
                       </span>
                     </div>
 
                     <button
-                      disabled={isDone}
+                      disabled={isDone || isLocked}
                       onClick={() =>
                         handleComplete(lesson._id)
                       }
-                      className={`text-sm px-4 py-2 rounded-lg transition ${
+                      className={`text-sm px-4 py-2 rounded-lg transition cursor-pointer ${
                         isDone
                           ? "bg-green-100 text-green-600 cursor-not-allowed"
+                          : isLocked
+                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                           : "bg-teal-500 hover:bg-teal-600 text-white"
                       }`}
                     >
                       {isDone
                         ? "Completed"
+                        : isLocked
+                        ? "Locked"
                         : "Mark Complete"}
                     </button>
                   </div>
