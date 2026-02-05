@@ -1,7 +1,11 @@
-import { Request, Response } from "express";
+import { Response } from "express";
+import type { AuthRequest } from "../types/auth-request";
 import { Module } from "../models/module.model";
 
-export const createModule = async (req: Request, res: Response) => {
+export const createModule = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { title, courseId, order } = req.body;
 
@@ -13,21 +17,17 @@ export const createModule = async (req: Request, res: Response) => {
 
     res.status(201).json(module);
   } catch {
-    res.status(500).json({ message: "Failed to create module" });
+    res.status(500).json({ message: "Module creation failed" });
   }
 };
 
 export const getModulesByCourse = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) => {
-  try {
-    const modules = await Module.find({
-      course: req.params.courseId,
-    }).sort({ order: 1 });
+  const modules = await Module.find({
+    course: req.params.courseId,
+  }).sort({ order: 1 });
 
-    res.json(modules);
-  } catch {
-    res.status(500).json({ message: "Failed to fetch modules" });
-  }
+  res.json(modules);
 };

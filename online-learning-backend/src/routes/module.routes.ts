@@ -9,6 +9,10 @@ import { instructorOnly } from "../middleware/role.middleware";
 const router = Router();
 
 router.post("/", authenticate, instructorOnly, createModule);
-router.get("/course/:courseId", getModulesByCourse);
+router.get(
+  "/course/:courseId",
+  authenticate,
+  getModulesByCourse
+);
 
 export default router;

@@ -14,9 +14,12 @@ const moduleSchema = new Schema<IModule>(
       ref: "Course",
       required: true,
     },
-    order: { type: Number, required: true },
+    order: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-export const Module = mongoose.model<IModule>("Module", moduleSchema);
+export const Module = mongoose.model<IModule>(
+  "Module",
+  moduleSchema
+);

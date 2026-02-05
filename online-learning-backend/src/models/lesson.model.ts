@@ -3,11 +3,10 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface ILesson extends Document {
   title: string;
   module: mongoose.Types.ObjectId;
-  videoUrl: string;
-  content: string;
+  videoUrl?: string;
+  content?: string;
   order: number;
-  releaseDate?: Date;
-  duration: number; // minutes
+  isDripLocked: boolean;
 }
 
 const lessonSchema = new Schema<ILesson>(
@@ -18,13 +17,15 @@ const lessonSchema = new Schema<ILesson>(
       ref: "Module",
       required: true,
     },
-    videoUrl: { type: String, required: true },
-    content: { type: String },
-    order: { type: Number, required: true },
-    releaseDate: { type: Date },
-    duration: { type: Number },
+    videoUrl: String,
+    content: String,
+    order: { type: Number, default: 0 },
+    isDripLocked: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-export const Lesson = mongoose.model<ILesson>("Lesson", lessonSchema);
+export const Lesson = mongoose.model<ILesson>(
+  "Lesson",
+  lessonSchema
+);
