@@ -15,6 +15,8 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.4",
+    "downloadjs": "^1.4.7",
+    "html-to-image": "^1.11.13",
     "jwt-decode": "^4.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/downloadjs": "^1.4.6",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.11",
     "@types/react-dom": "^19.2.3",
