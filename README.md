@@ -124,10 +124,10 @@ npm run dev
 
 
 Create .env :-
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-GROQ_API_KEY=optional_ai_key
+- PORT=5000
+- MONGO_URI=your_mongodb_connection_string
+- JWT_SECRET=your_jwt_secret
+- GROQ_API_KEY=optional_ai_key
 
 ## Frontend Setup
 cd online-learning-frontend
