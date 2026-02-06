@@ -10,7 +10,7 @@ export const createLesson = async (
   res: Response
 ) => {
   try {
-    const { title, moduleId, content, order } = req.body;
+    const { title, moduleId, content, order, videoUrl } = req.body;
 
     if (!req.user || req.user.role !== "INSTRUCTOR") {
       return res.status(403).json({
@@ -23,10 +23,6 @@ export const createLesson = async (
         message: "Title and moduleId are required",
       });
     }
-
-    const videoUrl = req.file
-      ? (req.file as Express.Multer.File).path
-      : undefined;
 
     const lesson = await Lesson.create({
       title,

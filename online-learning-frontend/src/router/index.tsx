@@ -33,6 +33,7 @@ const AssignmentPage = lazy(() => import("../pages/AssignmentPage"));
 const InstructorDashboard = lazy(() => import("../pages/InstructorDashboard"));
 const CreateCourse = lazy(() => import("../pages/CreateCourse"));
 const InstructorCourseBuilder = lazy(() => import("../pages/InstructorCourseBuilder"));
+const EditCourse = lazy(() => import("../pages/EditCourse"));
 
 export const router = createBrowserRouter([
   // AUTH
@@ -133,6 +134,18 @@ export const router = createBrowserRouter([
           <ProtectedRoute>
             <RoleProtectedRoute allowedRoles={["INSTRUCTOR"]}>
               <CreateCourse />
+            </RoleProtectedRoute>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/instructor/edit-course/:courseId",
+        element: (
+          <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["INSTRUCTOR"]}>
+              <Suspense fallback={<Loader />}>
+                <EditCourse />
+              </Suspense>
             </RoleProtectedRoute>
           </ProtectedRoute>
         ),

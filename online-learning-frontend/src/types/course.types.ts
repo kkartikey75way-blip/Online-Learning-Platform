@@ -2,6 +2,7 @@ export interface Lesson {
   _id: string;
   title: string;
   videoUrl?: string;
+  content?: string;
   isLocked?: boolean;
 }
 

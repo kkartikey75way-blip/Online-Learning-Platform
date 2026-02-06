@@ -27,9 +27,17 @@ export default function CourseBuilder() {
 
   return (
     <div className="p-10 bg-[#f9f7f2] min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">
-        Course Builder
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">
+          Course Builder
+        </h1>
+        <button
+          onClick={() => window.history.back()}
+          className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition"
+        >
+          Done / Go Back
+        </button>
+      </div>
 
       <div className="flex gap-3 mb-6">
         <input
@@ -56,6 +64,7 @@ export default function CourseBuilder() {
 function ModuleBlock({ module }: any) {
   const [lessons, setLessons] = useState<any[]>([]);
   const [title, setTitle] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
 
   const loadLessons = async () => {
     const res = await api.get(
@@ -73,8 +82,10 @@ function ModuleBlock({ module }: any) {
       title,
       moduleId: module._id,
       content: "Lesson content",
+      videoUrl,
     });
     setTitle("");
+    setVideoUrl("");
     loadLessons();
   };
 
@@ -94,6 +105,12 @@ function ModuleBlock({ module }: any) {
           placeholder="Lesson title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          className="border p-2 rounded"
+          placeholder="Video URL"
+          value={videoUrl}
+          onChange={(e) => setVideoUrl(e.target.value)}
         />
         <button
           onClick={createLesson}

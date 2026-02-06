@@ -2,21 +2,22 @@ import { useState } from "react";
 import { submitAssignment } from "../services/assignment.service";
 
 export default function AssignmentPage({ assignmentId }: any) {
-  const [file, setFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState("");
 
   const submit = async () => {
-    if (!file) return;
-    await submitAssignment(assignmentId, file);
+    if (!fileUrl) return;
+    await submitAssignment(assignmentId, fileUrl);
     alert("Submitted successfully");
   };
 
   return (
     <div className="p-10">
       <input
-        type="file"
-        onChange={(e) =>
-          setFile(e.target.files?.[0] || null)
-        }
+        type="text"
+        placeholder="Enter file URL"
+        className="p-2 border rounded"
+        value={fileUrl}
+        onChange={(e) => setFileUrl(e.target.value)}
       />
       <button
         onClick={submit}

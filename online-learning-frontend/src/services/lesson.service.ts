@@ -1,9 +1,9 @@
 import { api } from "./api";
 
 export const createLesson = async (
-  formData: FormData
+  data: any
 ) => {
-  const res = await api.post("/lessons", formData);
+  const res = await api.post("/lessons", data);
   return res.data;
 };
 

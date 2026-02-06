@@ -251,3 +251,77 @@ export const publishCourse = async (
   }
 };
 
+export const deleteCourse = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.instructor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You do not own this course" });
+    }
+
+    // Optional: Delete related enrollments/progress/lessons/modules here if desired
+    // For now, simple document deletion
+    await Course.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Course deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ message: "Delete failed" });
+  }
+};
+
+export const updateCourse = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.instructor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You do not own this course" });
+    }
+
+    const {
+      title,
+      description,
+      category,
+      price,
+      capacity,
+      dripEnabled,
+    } = req.body;
+
+    course.title = title || course.title;
+    course.description = description || course.description;
+    course.category = category || course.category;
+    course.price = price !== undefined ? price : course.price;
+    course.capacity = capacity !== undefined ? capacity : course.capacity;
+    course.dripEnabled = dripEnabled !== undefined ? dripEnabled : course.dripEnabled;
+
+    await course.save();
+
+    res.json(course);
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ message: "Update failed" });
+  }
+};
+

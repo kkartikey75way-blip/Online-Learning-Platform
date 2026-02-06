@@ -7,9 +7,10 @@ export const submitAssignment = async (
   res: Response
 ) => {
   const { assignmentId } = req.params;
+  const { fileUrl } = req.body;
 
-  if (!req.user || !req.file) {
-    return res.status(400).json({ message: "Invalid submission" });
+  if (!req.user || !fileUrl) {
+    return res.status(400).json({ message: "Invalid submission. fileUrl is required." });
   }
 
   const assignment = await Assignment.findByIdAndUpdate(
@@ -18,7 +19,7 @@ export const submitAssignment = async (
       $push: {
         submissions: {
           student: req.user._id,
-          fileUrl: (req.file as any).path,
+          fileUrl: fileUrl,
         },
       },
     },

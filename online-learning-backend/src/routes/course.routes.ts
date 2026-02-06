@@ -6,6 +6,8 @@ import {
   enrollInCourse,
   getMyEnrolledCourses,
   publishCourse,
+  deleteCourse,
+  updateCourse,
 } from "../controllers/course.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { instructorOnly } from "../middleware/role.middleware";
@@ -13,6 +15,9 @@ import { instructorOnly } from "../middleware/role.middleware";
 const router = Router();
 
 router.get("/me/enrolled", authenticate, getMyEnrolledCourses);
+
+router.delete("/:id", authenticate, instructorOnly, deleteCourse);
+router.put("/:id", authenticate, instructorOnly, updateCourse);
 
 router.patch(
   "/:id/publish",

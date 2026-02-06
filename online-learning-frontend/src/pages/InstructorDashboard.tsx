@@ -32,6 +32,29 @@ export default function InstructorDashboard() {
     }
   };
 
+  const handleDelete = async (courseId: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/courses/${courseId}`);
+        Swal.fire("Deleted!", "Your course has been deleted.", "success");
+        const updatedStats = await getInstructorStats();
+        setStats(updatedStats);
+      } catch (error) {
+        Swal.fire("Error", "Failed to delete course", "error");
+      }
+    }
+  };
+
   if (!stats) {
     return <div className="p-10">Loading dashboard...</div>;
   }
@@ -101,38 +124,53 @@ export default function InstructorDashboard() {
 
 
                 <td>
-                  <button
-                    onClick={() =>
-                      api
-                        .patch(`/courses/${course.id}/publish`)
-                        .then(() => {
-                          Swal.fire("Published", "Course is live", "success");
-                          setStats((prev: any) => ({
-                            ...prev,
-                            courseStats: prev.courseStats.map((c: any) =>
-                              c.id === course.id
-                                ? { ...c, isPublished: true }
-                                : c
-                            ),
-                          }));
-                        })
-                        .catch((err) =>
-                          Swal.fire(
-                            "Failed",
-                            err?.response?.data?.message || "Publish failed",
-                            "error"
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() =>
+                        api
+                          .patch(`/courses/${course.id}/publish`)
+                          .then(() => {
+                            Swal.fire("Published", "Course is live", "success");
+                            setStats((prev: any) => ({
+                              ...prev,
+                              courseStats: prev.courseStats.map((c: any) =>
+                                c.id === course.id
+                                  ? { ...c, isPublished: true }
+                                  : c
+                              ),
+                            }));
+                          })
+                          .catch((err) =>
+                            Swal.fire(
+                              "Failed",
+                              err?.response?.data?.message || "Publish failed",
+                              "error"
+                            )
                           )
-                        )
-                    }
-                    disabled={course.isPublished}
-                    className={`px-3 py-1 rounded text-sm ${course.isPublished
+                      }
+                      disabled={course.isPublished}
+                      className={`px-3 py-1 rounded text-sm ${course.isPublished
                         ? "bg-gray-300 cursor-not-allowed"
                         : "bg-teal-500 text-white"
-                      }`}
-                  >
-                    {course.isPublished ? "Published" : "Publish"}
-                  </button>
+                        }`}
+                    >
+                      {course.isPublished ? "Published" : "Publish"}
+                    </button>
 
+                    <button
+                      onClick={() => navigate(`/instructor/edit-course/${course.id}`)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(course.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

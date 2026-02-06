@@ -2,14 +2,11 @@ import { api } from "./api";
 
 export const submitAssignment = async (
   assignmentId: string,
-  file: File
+  fileUrl: string
 ) => {
-  const formData = new FormData();
-  formData.append("file", file);
-
   const res = await api.post(
     `/assignments/submit/${assignmentId}`,
-    formData
+    { fileUrl }
   );
 
   return res.data;
