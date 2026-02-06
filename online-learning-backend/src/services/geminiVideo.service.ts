@@ -1,28 +1,75 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
+import dotenv from "dotenv";
+import ytSearch from "yt-search";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+dotenv.config();
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function getVideoRecommendations(lessonTitle: string) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    try {
+        const chatCompletion = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: "system",
+                    content: `You are an educational assistant. Generate 3 specific YouTube search queries to find the best tutorial videos for the topic: "${lessonTitle}". Return ONLY a JSON array of strings.`
+                },
+                {
+                    role: "user",
+                    content: lessonTitle
+                }
+            ],
+            model: "llama-3.1-8b-instant",
+            temperature: 0.5,
+        });
 
-    const prompt = `
-You are an online learning assistant.
+        const content = chatCompletion.choices[0]?.message?.content || "[]";
 
-Lesson title: "${lessonTitle}"
+        let queries: string[] = [];
+        try {
+            const cleaned = content.replace(/```json/g, "").replace(/```/g, "").trim();
+            queries = JSON.parse(cleaned);
+        } catch (e) {
+            console.warn("Failed to parse Groq response:", content);
+            queries = [lessonTitle];
+        }
 
-Generate 3 high-quality YouTube search queries for tutorial or explanation videos.
-Return the result as a JSON array of strings only.
-`;
+        // Parallel search for videos
+        const results = await Promise.all(queries.map(async (q) => {
+            try {
+                const searchResult = await ytSearch(q);
+                const video = searchResult.videos[0]; // Get first video
+                if (video) {
+                    return {
+                        title: video.title,
+                        url: video.url, // Direct link
+                        duration: video.timestamp
+                    };
+                }
+                return null;
+            } catch (err) {
+                console.error(`Search failed for ${q}:`, err);
+                return null;
+            }
+        }));
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+        // Filter nulls and fallback if empty
+        const validResults = results.filter(r => r !== null);
 
-    const queries: string[] = JSON.parse(text);
+        if (validResults.length === 0) {
+            return [{
+                title: `${lessonTitle} (Search)`,
+                url: `https://www.youtube.com/results?search_query=${encodeURIComponent(lessonTitle)}`
+            }];
+        }
 
-    const videoUrls = queries.map(q => ({
-        title: q,
-        url: `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`
-    }));
+        return validResults;
 
-    return videoUrls;
+    } catch (error) {
+        console.error("Groq/Video API Error:", error);
+        return [{
+            title: lessonTitle,
+            url: `https://www.youtube.com/results?search_query=${encodeURIComponent(lessonTitle)}`
+        }];
+    }
 }

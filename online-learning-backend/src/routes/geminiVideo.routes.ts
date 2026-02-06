@@ -8,14 +8,18 @@ router.get("/", async (req, res) => {
         const { heading } = req.query;
 
         if (!heading) {
-            return res.status(400).json({ message: "Lesson heading is required" });
+            return res.status(400).json({ message: "Lesson heading required" });
         }
 
         const videos = await getVideoRecommendations(heading as string);
-        res.json({ lesson: heading, videos });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to fetch video recommendations" });
+        return res.json({ videos });
+    } catch (error) {
+        console.error("Gemini error:", error);
+
+        return res.status(200).json({
+            videos: [],
+            message: "AI recommendations temporarily unavailable",
+        });
     }
 });
 

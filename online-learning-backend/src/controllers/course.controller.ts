@@ -79,20 +79,33 @@ export const getCourseById = async (
     const course = await Course.findById(req.params.id)
       .populate("instructor", "name email");
 
-    if (!course || !course.isPublished) {
+    if (!course) {
       return res.status(404).json({
         message: "Course not found",
       });
     }
 
-    res.json(course);
+    const isInstructor =
+      !!req.user &&
+      course.instructor &&
+      (course.instructor as any)._id.toString() ===
+      req.user._id.toString();
+
+    if (!course.isPublished && !isInstructor) {
+      return res.status(404).json({
+        message: "Course not found",
+      });
+    }
+
+    return res.json(course);
   } catch (error) {
     console.error("Fetch course error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to fetch course",
     });
   }
 };
+
 
 export const enrollInCourse = async (
   req: AuthRequest,
@@ -318,10 +331,11 @@ export const updateCourse = async (
 
     await course.save();
 
-    res.json(course);
+    return res.status(200).json(course);
+
   } catch (err) {
     console.error("Update error:", err);
-    res.status(500).json({ message: "Update failed" });
+    return res.status(500).json({ message: "Update failed" });
   }
 };
 

@@ -1,10 +1,8 @@
 import { Response } from "express";
 import type { AuthRequest } from "../types/auth-request";
 import { Lesson } from "../models/lesson.model";
+import mongoose from "mongoose";
 
-/**
- * CREATE LESSON (Instructor)
- */
 export const createLesson = async (
   req: AuthRequest,
   res: Response
@@ -24,26 +22,29 @@ export const createLesson = async (
       });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+      return res.status(400).json({
+        message: "Invalid moduleId",
+      });
+    }
+
     const lesson = await Lesson.create({
       title,
       module: moduleId,
-      content,
-      videoUrl,
+      content: content || "",
+      videoUrl: videoUrl || null,
       order: order ?? 0,
     });
 
-    res.status(201).json(lesson);
+    return res.status(201).json(lesson);
   } catch (error) {
     console.error("Create lesson error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Lesson creation failed",
     });
   }
 };
 
-/**
- * ✅ GET LESSONS BY MODULE (Student + Instructor)
- */
 export const getLessonsByModule = async (
   req: AuthRequest,
   res: Response
@@ -51,14 +52,19 @@ export const getLessonsByModule = async (
   try {
     const { moduleId } = req.params;
 
-    const lessons = await Lesson.find({
-      module: moduleId,
-    }).sort({ order: 1 });
+    if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+      return res.status(400).json({
+        message: "Invalid moduleId",
+      });
+    }
 
-    res.json(lessons);
+    const lessons = await Lesson.find({ module: moduleId })
+      .sort({ order: 1 });
+
+    return res.status(200).json(lessons);
   } catch (error) {
     console.error("Fetch lessons error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to fetch lessons",
     });
   }

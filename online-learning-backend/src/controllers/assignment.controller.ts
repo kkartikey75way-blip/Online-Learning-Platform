@@ -26,5 +26,6 @@ export const submitAssignment = async (
     { new: true }
   );
 
-  res.json(assignment);
+  return res.status(200).json(assignment);
+
 };

@@ -28,7 +28,8 @@ router.patch(
 
 router.post("/:id/enroll", authenticate, enrollInCourse);
 
-router.get("/:id", getCourseById);
+import { authenticateOptional } from "../middleware/auth.middleware";
+router.get("/:id", authenticateOptional, getCourseById);
 router.get("/", getAllCourses);
 router.post("/", authenticate, createCourse);
 

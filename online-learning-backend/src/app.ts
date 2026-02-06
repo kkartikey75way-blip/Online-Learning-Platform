@@ -1,4 +1,3 @@
-// src/app.ts
 import express from "express";
 import cors from "cors";
 
@@ -8,7 +7,13 @@ import moduleRoutes from "./routes/module.routes";
 import lessonRoutes from "./routes/lesson.routes";
 import progressRoutes from "./routes/progress.routes";
 import instructorRoutes from "./routes/instructor.routes";
+import assignmentRoutes from "./routes/assignment.routes";
+import quizRoutes from "./routes/quiz.routes";
+import certificateRoutes from "./routes/certificate.routes";
 import geminiVideoRoutes from "./routes/geminiVideo.routes";
+
+import { errorHandler } from "./middleware/error.middleware";
+
 
 const app = express();
 
@@ -27,10 +32,18 @@ app.use("/api/modules", moduleRoutes);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/instructor", instructorRoutes);
+
+app.use("/api/assignments", assignmentRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/certificates", certificateRoutes);
+
+
 app.use("/api/ai/videos", geminiVideoRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "OK" });
 });
+
+app.use(errorHandler);
 
 export default app;

@@ -4,18 +4,10 @@ import {
   getLessonsByModule,
 } from "../controllers/lesson.controller";
 import { authenticate } from "../middleware/auth.middleware";
-import { instructorOnly } from "../middleware/role.middleware";
-
 
 const router = Router();
 
-router.post(
-  "/",
-  authenticate,
-  instructorOnly,
-  createLesson
-);
-
+router.post("/", authenticate, createLesson);
 router.get("/module/:moduleId", getLessonsByModule);
 
 export default router;

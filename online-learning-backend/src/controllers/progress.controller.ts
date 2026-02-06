@@ -117,5 +117,5 @@ export const markLessonComplete = async (
 
   await progress.save();
 
-  res.json(progress);
+  return res.status(200).json(progress);
 };

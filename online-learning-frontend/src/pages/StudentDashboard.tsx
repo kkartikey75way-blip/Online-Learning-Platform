@@ -66,29 +66,31 @@ export default function StudentDashboard() {
             {enrollments.map((enroll) => (
               <div
                 key={enroll._id}
-                className="bg-white rounded-xl p-6 shadow"
+                className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex flex-col"
               >
-                <h2 className="text-lg font-semibold text-indigo-900 mb-1">
-                  {enroll.course.title}
-                </h2>
-
-                <p className="text-sm text-gray-500 mb-4">
-                  Instructor: {enroll.course.instructor.name}
-                </p>
+                <div className="mb-4 flex-1">
+                  <h2 className="text-xl font-bold text-gray-800 mb-2 truncate">
+                    {enroll.course.title}
+                  </h2>
+                  <p className="text-sm text-gray-500 font-medium">
+                    Instructor: <span className="text-indigo-600">{enroll.course.instructor.name}</span>
+                  </p>
+                </div>
 
                 {/* PROGRESS BAR */}
-                <div className="mb-4">
-                  <div className="w-full bg-gray-200 h-2 rounded">
+                <div className="mb-6">
+                  <div className="flex justify-between text-xs font-semibold text-gray-500 mb-1">
+                    <span>Progress</span>
+                    <span>{Math.round(enroll.progressPercent ?? 0)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
                     <div
-                      className="bg-teal-500 h-2 rounded"
+                      className="bg-teal-500 h-full rounded-full transition-all duration-500 ease-out"
                       style={{
                         width: `${enroll.progressPercent ?? 0}%`,
                       }}
                     />
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {enroll.progressPercent ?? 0}% completed
-                  </p>
                 </div>
 
                 {/* ACTIONS */}
@@ -96,9 +98,10 @@ export default function StudentDashboard() {
                   onClick={() =>
                     navigate(`/courses/${enroll.course._id}`)
                   }
-                  className="w-full text-sm bg-indigo-900 text-white py-2 rounded hover:bg-indigo-800"
+                  className="w-full text-sm font-semibold bg-indigo-600 text-white py-2.5 rounded-lg hover:bg-indigo-700 transition-colors flex justify-between items-center px-4 group"
                 >
-                  Continue Learning →
+                  <span>Continue Learning</span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
                 </button>
               </div>
             ))}
