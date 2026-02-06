@@ -4,6 +4,8 @@ import { api } from "../services/api";
 import { markLessonComplete } from "../services/progress.service";
 import { io, Socket } from "socket.io-client";
 import ChatModule from "../components/ChatModule";
+import AssignmentPage from "./AssignmentPage";
+import DiscussionSection from "../components/DiscussionSection";
 
 import {
   HiOutlineCheckCircle,
@@ -13,6 +15,7 @@ import {
   HiChevronUp,
   HiArrowSmallLeft,
   HiArrowSmallRight,
+  HiOutlineDocumentText,
 } from "react-icons/hi2";
 
 import type { Module, Lesson } from "../types/course.types";
@@ -20,7 +23,8 @@ import type { Module, Lesson } from "../types/course.types";
 export default function CourseDetails() {
   const { id: courseId } = useParams<{ id: string }>();
 
-  const [activeTab, setActiveTab] = useState<"curriculum" | "info" | "discussion" | "notes" | "messages">("curriculum");
+  const [activeTab, setActiveTab] = useState<"curriculum" | "info" | "discussion" | "notes" | "messages" | "assignments">("curriculum");
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [courseData, setCourseData] = useState<any>(null);
 
   // Restore missing state
@@ -412,6 +416,23 @@ export default function CourseDetails() {
                             </div>
                           )
                         })}
+                        {/* Assignment Row */}
+                        <div
+                          onClick={() => {
+                            setActiveModuleId(module._id);
+                            setActiveTab("assignments");
+                          }}
+                          className={`px-6 py-3 flex items-center gap-3 cursor-pointer transition border-l-4 group ${(activeTab as string) === "assignments" && activeModuleId === module._id ? "bg-indigo-50 border-indigo-600" : "border-transparent hover:bg-indigo-50"}`}
+                        >
+                          <div className="mt-1 shrink-0">
+                            <HiOutlineDocumentText className="text-gray-400 group-hover:text-indigo-600" size={18} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-700 group-hover:text-indigo-900">
+                              Module Assignment
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -443,12 +464,16 @@ export default function CourseDetails() {
                 )}
               </div>
             ) : activeTab === "discussion" ? (
-              <div className="flex flex-col h-full bg-white">
+              <div className="flex flex-col h-full bg-white overflow-hidden">
                 <DiscussionSection courseId={courseId!} />
               </div>
             ) : activeTab === "notes" ? (
               <div className="flex flex-col h-full bg-white">
                 <NotesSection lessonId={activeLesson?._id} />
+              </div>
+            ) : activeTab === "assignments" ? (
+              <div className="flex flex-col h-full bg-white">
+                <AssignmentPage moduleId={activeModuleId!} />
               </div>
             ) : (
               <div className="flex flex-col h-full bg-white">
@@ -469,100 +494,7 @@ export default function CourseDetails() {
   );
 }
 
-function DiscussionSection({ courseId }: { courseId: string }) {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [newTitle, setNewTitle] = useState("");
-  const [newContent, setNewContent] = useState("");
-  const [loading, setLoading] = useState(true);
-  const socketRef = useRef<Socket | null>(null);
 
-  const fetchPosts = async () => {
-    try {
-      const res = await api.get(`/discussions/course/${courseId}`);
-      setPosts(res.data);
-    } catch (e) {
-      console.error("Failed to fetch posts");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPosts();
-
-    socketRef.current = io("http://localhost:5000"); // Base URL
-
-    socketRef.current.emit("join_course", courseId);
-
-    socketRef.current.on("new_post", (newPost: any) => {
-      setPosts((prev) => {
-        if (prev.find(p => p._id === newPost._id)) return prev;
-        return [newPost, ...prev];
-      });
-    });
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, [courseId]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle || !newContent) return;
-    try {
-      await api.post(`/discussions/course/${courseId}`, {
-        title: newTitle,
-        content: newContent
-      });
-      setNewTitle("");
-      setNewContent("");
-      // No need to fetchPosts(), socket handles it
-    } catch (e) {
-      alert("Failed to post");
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-full p-4 overflow-hidden">
-      <h3 className="font-bold text-gray-800 mb-4">Course Forum</h3>
-      <form onSubmit={handleSubmit} className="mb-6 space-y-2 border-b pb-4 shrink-0">
-        <input
-          type="text"
-          placeholder="Topic title..."
-          className="w-full border rounded p-2 text-sm"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-        />
-        <textarea
-          placeholder="Ask a question or share something..."
-          className="w-full border rounded p-2 text-sm h-20"
-          value={newContent}
-          onChange={(e) => setNewContent(e.target.value)}
-        />
-        <button className="w-full bg-teal-600 text-white rounded py-2 text-sm font-bold">
-          Post to Forum
-        </button>
-      </form>
-
-      <div className="flex-1 overflow-y-auto space-y-4">
-        {loading ? (
-          <p className="text-gray-400 text-center">Loading discussions...</p>
-        ) : posts.length === 0 ? (
-          <p className="text-gray-400 text-center">No discussions yet.</p>
-        ) : posts.map(post => (
-          <div key={post._id} className="p-3 border rounded-lg bg-gray-50">
-            <h4 className="font-bold text-sm text-gray-900">{post.title}</h4>
-            <p className="text-xs text-gray-600 mt-1">{post.content}</p>
-            <div className="flex justify-between items-center mt-2 text-[10px] text-gray-400">
-              <span>By {post.user?.name}</span>
-              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function NotesSection({ lessonId }: { lessonId?: string }) {
   const [note, setNote] = useState("");
