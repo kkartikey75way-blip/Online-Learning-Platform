@@ -58,7 +58,7 @@ export const getCourseProgress = async (
     progress.completedLessons.map((l) => l.toString())
   );
 
-  // 🔐 DRIP LOGIC
+
   let unlockedLessons: string[] = [];
 
   if (!course.dripEnabled) {

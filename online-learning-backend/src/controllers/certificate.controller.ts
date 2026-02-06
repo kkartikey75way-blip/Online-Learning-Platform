@@ -20,19 +20,19 @@ export const issueCertificate = async (req: AuthRequest, res: Response) => {
     const { courseId } = req.body;
     const userId = req.user!._id;
 
-    // Check Progress
+
     const progress = await Progress.findOne({ user: userId, course: courseId });
     if (!progress || progress.progressPercent < 100) {
       return res.status(400).json({ message: "Course not 100% complete" });
     }
 
-    // Check Existing
+
     const existing = await Certificate.findOne({ user: userId, course: courseId });
     if (existing) {
       return res.json(existing);
     }
 
-    // Create
+
     const cert = await Certificate.create({
       user: userId,
       course: courseId,

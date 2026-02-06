@@ -15,7 +15,7 @@ const CertificateTemplate = React.forwardRef<HTMLDivElement, CertificateTemplate
                 className="w-[800px] h-[600px] bg-white border-[16px] border-double border-indigo-900 p-12 flex flex-col items-center justify-between text-center relative overflow-hidden"
                 style={{ fontFamily: "'Inter', sans-serif" }}
             >
-                {/* Background Decoration */}
+
                 <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-indigo-50 rounded-full opacity-50" />
                 <div className="absolute bottom-[-50px] right-[-50px] w-64 h-64 bg-teal-50 rounded-full opacity-50" />
 

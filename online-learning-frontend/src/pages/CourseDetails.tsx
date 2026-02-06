@@ -40,7 +40,7 @@ export default function CourseDetails() {
         setCourseData(courseRes.data);
       }
 
-      /* 1️⃣ PROGRESS / ENROLLMENT CHECK */
+
       let completedSet = new Set<string>();
       let unlocked: string[] = [];
       let currentEnrolled = false;
@@ -66,7 +66,7 @@ export default function CourseDetails() {
       setLoadingEnrollment(false);
       setCompleted(completedSet);
 
-      /* 2️⃣ MODULES */
+
       const modulesRes = await api.get(`/modules/course/${courseId}`);
       const modulesWithLessons: Module[] = await Promise.all(
         modulesRes.data.map(async (mod: Module) => {
@@ -120,7 +120,6 @@ export default function CourseDetails() {
     }
   };
 
-  // ... (handleComplete, toggleModule same as before) ...
 
   const handleComplete = async (lessonId: string) => {
     if (!courseId || completed.has(lessonId)) return;
@@ -157,12 +156,12 @@ export default function CourseDetails() {
 
     if (currentModIdx === -1) return null;
 
-    // 1. Next lesson in same module
+    // Next lesson in same module
     if (currentLessIdx < modules[currentModIdx].lessons.length - 1) {
       return modules[currentModIdx].lessons[currentLessIdx + 1];
     }
 
-    // 2. First lesson of next module
+    // First lesson of next module
     if (currentModIdx < modules.length - 1) {
       for (let i = currentModIdx + 1; i < modules.length; i++) {
         if (modules[i].lessons.length > 0) {
@@ -191,12 +190,12 @@ export default function CourseDetails() {
 
     if (currentModIdx === -1) return null;
 
-    // 1. Prev lesson in same module
+    // Prev lesson in same module
     if (currentLessIdx > 0) {
       return modules[currentModIdx].lessons[currentLessIdx - 1];
     }
 
-    // 2. Last lesson of prev module
+    // Last lesson of prev module
     if (currentModIdx > 0) {
       for (let i = currentModIdx - 1; i >= 0; i--) {
         if (modules[i].lessons.length > 0) {
@@ -252,7 +251,6 @@ export default function CourseDetails() {
               </button>
             </div>
           ) : activeLesson ? (
-            // ... (Existing Player Code) ...
             <div className="w-full h-full flex flex-col">
               <div className="flex-1 flex items-center justify-center bg-black">
                 {activeLesson.videoUrl ? (
@@ -492,7 +490,6 @@ function DiscussionSection({ courseId }: { courseId: string }) {
   useEffect(() => {
     fetchPosts();
 
-    // Socket.io integration
     socketRef.current = io("http://localhost:5000"); // Base URL
 
     socketRef.current.emit("join_course", courseId);

@@ -23,7 +23,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
 
         const populatedMessage = await message.populate("sender", "name");
 
-        // Emit to receiver's personal room
+
         getIO().to(receiverId.toString()).emit("private_message", populatedMessage);
 
         res.status(201).json(message);
@@ -60,13 +60,13 @@ export const getStudentConversations = async (req: AuthRequest, res: Response) =
         const { courseId } = req.params;
         const instructorId = req.user!._id;
 
-        // Verify ownership
+
         const course = await Course.findById(courseId);
         if (!course || course.instructor.toString() !== instructorId.toString()) {
             return res.status(403).json({ message: "Unauthorized" });
         }
 
-        // This is a simplified version to get list of students who messaged
+
         const students = await Message.distinct("sender", {
             course: courseId,
             receiver: instructorId,

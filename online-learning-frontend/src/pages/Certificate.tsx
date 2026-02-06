@@ -82,11 +82,11 @@ export default function Certificates() {
         </div>
       )}
 
-      {/* CERTIFICATE MODAL */}
+
       {selectedCert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl max-w-[850px] w-full relative animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
+
             <div className="flex justify-between items-center p-6 border-b">
               <h3 className="text-xl font-bold text-gray-900">Certificate Preview</h3>
               <button
@@ -97,7 +97,7 @@ export default function Certificates() {
               </button>
             </div>
 
-            {/* Modal Content - Template */}
+
             <div className="p-6 bg-gray-100 overflow-hidden flex justify-center">
               <div className="shadow-2xl scale-[0.8] origin-center sm:scale-100">
                 <CertificateTemplate
@@ -110,7 +110,7 @@ export default function Certificates() {
               </div>
             </div>
 
-            {/* Modal Footer */}
+
             <div className="p-6 border-t flex justify-end gap-3">
               <button
                 onClick={() => setSelectedCert(null)}
@@ -136,7 +136,7 @@ export default function Certificates() {
         </div>
       )}
 
-      {/* HIDDEN TEMPLATE FOR DOWNLOAD (In case modal scaling affects quality) */}
+
       <div className="fixed left-[-9999px] top-[-9999px]">
         {selectedCert && (
           <CertificateTemplate

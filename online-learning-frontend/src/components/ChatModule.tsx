@@ -38,7 +38,7 @@ export default function ChatModule({ courseId, otherUserId, otherUserName, curre
 
         fetchMessages();
 
-        // Socket.io integration
+
         socketRef.current = io("http://localhost:5000");
         socketRef.current.emit("join_user", currentUserId);
 
@@ -67,7 +67,7 @@ export default function ChatModule({ courseId, otherUserId, otherUserName, curre
                 content: newMessage,
                 receiverId: otherUserId,
             });
-            // Add locally immediately for sender, with idempotency check
+
             setMessages((prev) => {
                 if (prev.find(m => m._id === res.data._id)) return prev;
                 return [...prev, { ...res.data, sender: { _id: currentUserId, name: "Me" } }];
