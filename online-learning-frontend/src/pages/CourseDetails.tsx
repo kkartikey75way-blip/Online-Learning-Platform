@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { markLessonComplete } from "../services/progress.service";
 import { io, Socket } from "socket.io-client";
@@ -22,6 +22,7 @@ import type { Module, Lesson } from "../types/course.types";
 
 export default function CourseDetails() {
   const { id: courseId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"curriculum" | "info" | "discussion" | "notes" | "messages" | "assignments">("curriculum");
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
@@ -443,11 +444,14 @@ export default function CourseDetails() {
                 {courseData ? (
                   <>
                     <h2 className="text-xl font-bold text-gray-900 mb-2">{courseData.title}</h2>
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                    <div
+                      onClick={() => navigate(`/courses?instructor=${courseData.instructor?._id}`)}
+                      className="flex items-center gap-2 mb-4 cursor-pointer hover:text-indigo-600 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs group-hover:bg-indigo-200 transition-colors">
                         {courseData.instructor?.name?.substring(0, 2) || "IN"}
                       </div>
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="text-sm font-medium text-gray-600 group-hover:text-indigo-600 transition-colors">
                         Instructor: {courseData.instructor?.name || "Unknown"}
                       </span>
                     </div>

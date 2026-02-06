@@ -80,6 +80,28 @@ export const getAllCourses = async (
     });
   }
 };
+export const getCoursesByInstructor = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const { instructorId } = req.params;
+    const courses = await Course.find({
+      instructor: instructorId,
+      isPublished: true,
+    })
+      .populate("instructor", "name")
+      .sort({ createdAt: -1 });
+
+    res.json(courses);
+  } catch (error) {
+    console.error("Fetch instructor courses error:", error);
+    res.status(500).json({
+      message: "Failed to fetch instructor courses",
+    });
+  }
+};
+
 
 export const getCourseById = async (
   req: AuthRequest,

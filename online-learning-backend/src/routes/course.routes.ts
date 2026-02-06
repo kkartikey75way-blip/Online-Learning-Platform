@@ -8,6 +8,7 @@ import {
   publishCourse,
   deleteCourse,
   updateCourse,
+  getCoursesByInstructor,
 } from "../controllers/course.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { instructorOnly } from "../middleware/role.middleware";
@@ -29,6 +30,7 @@ router.patch(
 router.post("/:id/enroll", authenticate, enrollInCourse);
 
 import { authenticateOptional } from "../middleware/auth.middleware";
+router.get("/instructor/:instructorId", getCoursesByInstructor);
 router.get("/:id", authenticateOptional, getCourseById);
 router.get("/", getAllCourses);
 router.post("/", authenticate, createCourse);
