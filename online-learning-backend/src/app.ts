@@ -11,6 +11,9 @@ import assignmentRoutes from "./routes/assignment.routes";
 import quizRoutes from "./routes/quiz.routes";
 import certificateRoutes from "./routes/certificate.routes";
 import geminiVideoRoutes from "./routes/geminiVideo.routes";
+import discussionRoutes from "./routes/discussion.routes";
+import noteRoutes from "./routes/note.routes";
+import messageRoutes from "./routes/message.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
 
@@ -36,7 +39,9 @@ app.use("/api/instructor", instructorRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/certificates", certificateRoutes);
-
+app.use("/api/discussions", discussionRoutes);
+app.use("/api/notes", noteRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.use("/api/ai/videos", geminiVideoRoutes);
 
