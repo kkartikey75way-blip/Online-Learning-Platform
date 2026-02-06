@@ -34,3 +34,8 @@ export const updateCourse = async (id: string, data: any) => {
   const res = await api.put(`/courses/${id}`, data);
   return res.data;
 };
+
+export const getRecommendedCourses = async () => {
+  const res = await api.get("/courses/recommendations");
+  return res.data;
+};

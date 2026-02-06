@@ -9,6 +9,7 @@ import {
   deleteCourse,
   updateCourse,
   getCoursesByInstructor,
+  getRecommendedCourses,
 } from "../controllers/course.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { instructorOnly } from "../middleware/role.middleware";
@@ -28,6 +29,7 @@ router.patch(
 );
 
 router.post("/:id/enroll", authenticate, enrollInCourse);
+router.get("/recommendations", authenticate, getRecommendedCourses);
 
 import { authenticateOptional } from "../middleware/auth.middleware";
 router.get("/instructor/:instructorId", getCoursesByInstructor);

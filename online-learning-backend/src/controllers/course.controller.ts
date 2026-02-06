@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 import type { AuthRequest } from "../types/auth-request";
 import { Course } from "../models/course.model";
+import { User } from "../models/user.model";
 import { Enrollment } from "../models/enrollment.model";
 import { Progress } from "../models/progress.model";
 import { Module } from "../models/module.model";
@@ -98,6 +99,48 @@ export const getCoursesByInstructor = async (
     console.error("Fetch instructor courses error:", error);
     res.status(500).json({
       message: "Failed to fetch instructor courses",
+    });
+  }
+};
+
+export const getRecommendedCourses = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let query: any = { isPublished: true };
+
+    if (user.interests && user.interests.length > 0) {
+      query.category = { $in: user.interests };
+    }
+
+    const recommendations = await Course.find(query)
+      .populate("instructor", "name")
+      .sort({ enrolledCount: -1 })
+      .limit(6);
+
+    if (recommendations.length === 0 && user.interests && user.interests.length > 0) {
+      const generalPopular = await Course.find({ isPublished: true })
+        .populate("instructor", "name")
+        .sort({ enrolledCount: -1 })
+        .limit(6);
+      return res.json(generalPopular);
+    }
+
+    res.json(recommendations);
+  } catch (error) {
+    console.error("Fetch recommendations error:", error);
+    res.status(500).json({
+      message: "Failed to fetch recommendations",
     });
   }
 };

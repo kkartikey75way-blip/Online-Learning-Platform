@@ -386,8 +386,29 @@ export default function CourseDetails() {
 
                     {expandedModules.has(module._id) && (
                       <div className="bg-gray-50">
-                        {module.lessons.map((lesson) => {
-                          const isLocked = lesson.isLocked && !completed.has(lesson._id);
+                        {module.lessons.map((lesson, lessonIndex) => {
+                          let isLocked = lesson.isLocked && !completed.has(lesson._id);
+
+                          // Drip Content Logic: Lock if previous lesson not done
+                          if (courseData?.dripEnabled) {
+                            if (lessonIndex > 0) {
+                              const prevLesson = module.lessons[lessonIndex - 1];
+                              if (!completed.has(prevLesson._id)) {
+                                isLocked = true;
+                              }
+                            } else {
+                              // If it's the first lesson of a module, check the last lesson of the previous module
+                              const moduleIndex = modules.findIndex(m => m._id === module._id);
+                              if (moduleIndex > 0) {
+                                const prevModule = modules[moduleIndex - 1];
+                                const lastLessonOfPrevModule = prevModule.lessons[prevModule.lessons.length - 1];
+                                if (lastLessonOfPrevModule && !completed.has(lastLessonOfPrevModule._id)) {
+                                  isLocked = true;
+                                }
+                              }
+                            }
+                          }
+
                           const isActive = activeLesson?._id === lesson._id;
                           const isDone = completed.has(lesson._id);
 

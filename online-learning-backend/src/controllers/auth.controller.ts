@@ -107,3 +107,17 @@ export const getMe = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Failed to fetch user context" });
   }
 };
+
+export const updateInterests = async (req: AuthRequest, res: Response) => {
+  try {
+    const { interests } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user!._id,
+      { interests },
+      { new: true }
+    );
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update interests" });
+  }
+};

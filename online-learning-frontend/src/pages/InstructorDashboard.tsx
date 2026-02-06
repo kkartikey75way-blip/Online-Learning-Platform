@@ -16,8 +16,10 @@ interface CourseStat {
 
 export default function InstructorDashboard() {
   const [stats, setStats] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<"performance" | "messages">("performance");
+  const [activeTab, setActiveTab] = useState<"performance" | "messages" | "analytics">("performance");
   const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [studentAnalytics, setStudentAnalytics] = useState<any[]>([]);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [conversations, setConversations] = useState<any[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const navigate = useNavigate();
@@ -25,6 +27,18 @@ export default function InstructorDashboard() {
   useEffect(() => {
     getInstructorStats().then(setStats);
   }, []);
+
+  const fetchAnalytics = async (courseId: string) => {
+    setLoadingAnalytics(true);
+    try {
+      const res = await api.get(`/instructor/course/${courseId}/analytics`);
+      setStudentAnalytics(res.data);
+    } catch (e) {
+      console.error("Failed to fetch analytics");
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  };
 
   const fetchConversations = async (courseId: string) => {
     try {
@@ -87,6 +101,12 @@ export default function InstructorDashboard() {
           className={`px-6 py-2 font-semibold transition ${activeTab === "messages" ? "text-indigo-600 border-b-2 border-indigo-600 bg-white" : "text-gray-500 hover:text-gray-700"}`}
         >
           Messages
+        </button>
+        <button
+          onClick={() => setActiveTab("analytics")}
+          className={`px-6 py-2 font-semibold transition ${activeTab === "analytics" ? "text-indigo-600 border-b-2 border-indigo-600 bg-white" : "text-gray-500 hover:text-gray-700"}`}
+        >
+          Analytics
         </button>
       </div>
 
@@ -159,6 +179,69 @@ export default function InstructorDashboard() {
             </div>
           </div>
         </>
+      ) : activeTab === "analytics" ? (
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Student Progress Analytics</h2>
+            <select
+              className="border p-2 rounded w-64 text-sm"
+              value={selectedCourse}
+              onChange={(e) => {
+                setSelectedCourse(e.target.value);
+                if (e.target.value) fetchAnalytics(e.target.value);
+              }}
+            >
+              <option value="">-- Select Course --</option>
+              {stats.courseStats.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.title}</option>
+              ))}
+            </select>
+          </div>
+
+          {!selectedCourse ? (
+            <div className="p-20 text-center text-gray-400">
+              Please select a course to view student progress.
+            </div>
+          ) : loadingAnalytics ? (
+            <div className="p-20 text-center text-gray-400">Loading student data...</div>
+          ) : studentAnalytics.length === 0 ? (
+            <div className="p-20 text-center text-gray-400">No students enrolled matching this criteria.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left border-b text-gray-500 uppercase text-[10px] tracking-widest">
+                    <th className="py-4 font-black">Student Name</th>
+                    <th className="font-black">Email</th>
+                    <th className="font-black text-center">Completion</th>
+                    <th className="font-black">Progress Bar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {studentAnalytics.map((student: any) => (
+                    <tr key={student._id} className="border-b last:border-none hover:bg-gray-50 transition-colors">
+                      <td className="py-4 font-bold text-gray-900">{student.user?.name}</td>
+                      <td className="text-gray-500">{student.user?.email}</td>
+                      <td className="text-center">
+                        <span className={`font-black ${student.progressPercent === 100 ? "text-green-600" : "text-indigo-600"}`}>
+                          {student.progressPercent}%
+                        </span>
+                      </td>
+                      <td className="w-1/3">
+                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${student.progressPercent === 100 ? "bg-green-500" : "bg-indigo-600"}`}
+                            style={{ width: `${student.progressPercent}%` }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="flex gap-6 h-[600px]">
           <div className="w-1/3 bg-white rounded-xl shadow p-4 flex flex-col">

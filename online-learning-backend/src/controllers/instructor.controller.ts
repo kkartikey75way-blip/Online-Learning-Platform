@@ -42,11 +42,11 @@ export const getInstructorStats = async (
       progress.length === 0
         ? 0
         : Math.round(
-            progress.reduce(
-              (sum, p) => sum + p.progressPercent,
-              0
-            ) / progress.length
-          );
+          progress.reduce(
+            (sum, p) => sum + p.progressPercent,
+            0
+          ) / progress.length
+        );
 
     // 6️⃣ Per-course stats
     const courseStats = courses.map((course) => {
@@ -62,11 +62,11 @@ export const getInstructorStats = async (
         courseProgress.length === 0
           ? 0
           : Math.round(
-              courseProgress.reduce(
-                (s, p) => s + p.progressPercent,
-                0
-              ) / courseProgress.length
-            );
+            courseProgress.reduce(
+              (s, p) => s + p.progressPercent,
+              0
+            ) / courseProgress.length
+          );
 
       return {
         id: course._id,
@@ -89,6 +89,39 @@ export const getInstructorStats = async (
     console.error("Instructor stats error:", error);
     res.status(500).json({
       message: "Failed to fetch instructor stats",
+    });
+  }
+};
+
+export const getCourseStudentAnalytics = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { courseId } = req.params;
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.instructor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You do not own this course" });
+    }
+
+    const students = await Progress.find({ course: courseId })
+      .populate("user", "name email")
+      .sort({ progressPercent: -1 });
+
+    res.json(students);
+  } catch (error) {
+    console.error("Fetch course analytics error:", error);
+    res.status(500).json({
+      message: "Failed to fetch student analytics",
     });
   }
 };
