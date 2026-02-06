@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import type { AuthRequest } from "../types/auth-request";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { User } from "../models/user.model";
@@ -93,4 +94,16 @@ export const login = async (req: Request, res: Response) => {
   const token = generateToken(user._id.toString());
 
   res.json({ token, user });
+};
+
+export const getMe = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.user!._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch user context" });
+  }
 };
