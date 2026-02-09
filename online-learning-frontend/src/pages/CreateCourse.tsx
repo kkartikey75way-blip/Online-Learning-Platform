@@ -1,24 +1,32 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "../services/api";
+import { courseSchema, CourseFormValues } from "../schemas/course.schema";
 
 export default function CreateCourse() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    category: "",
-    price: 0,
-    capacity: 50,
-    dripEnabled: false,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<CourseFormValues>({
+    resolver: zodResolver(courseSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "",
+      price: 0,
+      capacity: 50,
+      dripEnabled: false,
+    },
   });
 
-  const handleCreate = async () => {
+  const onSubmit: SubmitHandler<CourseFormValues> = async (data) => {
     try {
-      const res = await api.post("/courses", form);
-
+      const res = await api.post("/courses", data);
       const courseId = res.data._id;
 
       await Swal.fire({
@@ -28,101 +36,84 @@ export default function CreateCourse() {
         confirmButtonColor: "#14b8a6",
       });
 
-      // ✅ REDIRECT TO COURSE BUILDER
       navigate(`/instructor/course/${courseId}/builder`);
-    } catch (error: any) {
-      Swal.fire(
-        "Failed",
-        error?.response?.data?.message ||
-          "Course creation failed",
-        "error"
-      );
+    } catch (error: unknown) {
+      const message = error instanceof Error && (error as any).response?.data?.message
+        ? (error as any).response.data.message
+        : "Course creation failed";
+      Swal.fire("Failed", message, "error");
     }
   };
 
   return (
     <section className="min-h-screen bg-[#f9f7f2]">
       <div className="max-w-3xl mx-auto px-8 py-14">
+        <h1 className="text-3xl font-bold text-indigo-900 mb-6">Create New Course</h1>
 
-        <h1 className="text-3xl font-bold text-indigo-900 mb-6">
-          Create New Course
-        </h1>
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow p-8 space-y-4">
+          <div>
+            <input
+              placeholder="Course title"
+              className={`w-full p-3 border rounded ${errors.title ? "border-red-500" : ""}`}
+              {...register("title")}
+            />
+            {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
+          </div>
 
-        <div className="bg-white rounded-xl shadow p-8 space-y-4">
+          <div>
+            <textarea
+              placeholder="Course description"
+              className={`w-full p-3 border rounded ${errors.description ? "border-red-500" : ""}`}
+              rows={4}
+              {...register("description")}
+            />
+            {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
+          </div>
 
-          <input
-            placeholder="Course title"
-            className="w-full p-3 border rounded"
-            onChange={(e) =>
-              setForm({ ...form, title: e.target.value })
-            }
-          />
-
-          <textarea
-            placeholder="Course description"
-            className="w-full p-3 border rounded"
-            rows={4}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
-          />
-
-          <input
-            placeholder="Category (e.g. Web Development)"
-            className="w-full p-3 border rounded"
-            onChange={(e) =>
-              setForm({ ...form, category: e.target.value })
-            }
-          />
+          <div>
+            <input
+              placeholder="Category (e.g. Web Development)"
+              className={`w-full p-3 border rounded ${errors.category ? "border-red-500" : ""}`}
+              {...register("category")}
+            />
+            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category.message}</p>}
+          </div>
 
           <div className="flex gap-4">
-            <input
-              type="number"
-              placeholder="Price"
-              className="w-full p-3 border rounded"
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  price: Number(e.target.value),
-                })
-              }
-            />
+            <div className="flex-1">
+              <input
+                type="number"
+                placeholder="Price"
+                className={`w-full p-3 border rounded ${errors.price ? "border-red-500" : ""}`}
+                {...register("price", { valueAsNumber: true })}
+              />
+              {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
+            </div>
 
-            <input
-              type="number"
-              placeholder="Capacity"
-              className="w-full p-3 border rounded"
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  capacity: Number(e.target.value),
-                })
-              }
-            />
+            <div className="flex-1">
+              <input
+                type="number"
+                placeholder="Capacity"
+                className={`w-full p-3 border rounded ${errors.capacity ? "border-red-500" : ""}`}
+                {...register("capacity", { valueAsNumber: true })}
+              />
+              {errors.capacity && <p className="text-red-500 text-xs mt-1">{errors.capacity.message}</p>}
+            </div>
           </div>
 
           <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.dripEnabled}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  dripEnabled: e.target.checked,
-                })
-              }
-            />
+            <input type="checkbox" {...register("dripEnabled")} />
             Enable drip content
           </label>
 
           <button
-            onClick={handleCreate}
-            className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg cursor-pointer"
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg cursor-pointer transition disabled:opacity-50"
           >
-            Create Course
+            {isSubmitting ? "Creating..." : "Create Course"}
           </button>
-          
-        </div>
+        </form>
       </div>
     </section>
   );

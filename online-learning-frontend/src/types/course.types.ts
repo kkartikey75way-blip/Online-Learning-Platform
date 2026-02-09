@@ -11,3 +11,22 @@ export interface Module {
   title: string;
   lessons: Lesson[];
 }
+
+export interface Instructor {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+export interface Course {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  instructor: Instructor;
+  price: number;
+  capacity: number;
+  dripEnabled: boolean;
+  isPublished: boolean;
+  enrolledCount: number;
+}

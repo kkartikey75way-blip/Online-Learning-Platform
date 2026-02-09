@@ -16,12 +16,13 @@ const courseSchema = new Schema<ICourse>(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
-    category: { type: String, required: true },
+    category: { type: String, required: true, index: true },
 
     instructor: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     price: { type: Number, default: 0 },

@@ -188,69 +188,19 @@ export const enrollInCourse = async (
 ) => {
   try {
     if (!req.user) {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const courseId = req.params.id;
-
-    const course = await Course.findById(courseId);
-    if (!course || !course.isPublished) {
-      return res.status(404).json({
-        message: "Course not available",
-      });
-    }
-
-    if (course.enrolledCount >= course.capacity) {
-      return res.status(400).json({
-        message: "Course is full",
-      });
-    }
-
-    const alreadyEnrolled = await Enrollment.findOne({
-      user: req.user._id,
-      course: courseId,
-    });
-
-    if (alreadyEnrolled) {
-      return res.status(400).json({
-        message: "Already enrolled",
-      });
-    }
-
-    // Create enrollment
-    await Enrollment.create({
-      user: req.user._id,
-      course: courseId,
-    });
-
-    // Initialize progress (Upsert to avoid E11000 duplicate key error)
-    await Progress.findOneAndUpdate(
-      { user: req.user._id, course: courseId },
-      {
-        $setOnInsert: {
-          completedLessons: [],
-          progressPercent: 0,
-          completed: false
-        }
-      },
-      { upsert: true, new: true }
-    );
-
-    // Increment count
-    await Course.updateOne(
-      { _id: courseId },
-      { $inc: { enrolledCount: 1 } }
-    );
+    await CourseService.enrollUser(req.user._id.toString(), courseId);
 
     res.json({
       message: "Enrolled successfully",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Enrollment error:", error);
-    res.status(500).json({
-      message: "Enrollment failed",
+    res.status(400).json({
+      message: error.message || "Enrollment failed",
     });
   }
 };
@@ -348,6 +298,8 @@ export const publishCourse = async (
   }
 };
 
+import { CourseService } from "../services/course.service";
+
 export const deleteCourse = async (
   req: AuthRequest,
   res: Response
@@ -367,80 +319,11 @@ export const deleteCourse = async (
       return res.status(403).json({ message: "You do not own this course" });
     }
 
-    // 🔹 CASCADE DELETION WITH VERBOSE LOGGING
-    console.log(`[DELETE] Starting deletion for course: ${course._id} (${course.title})`);
+    await CourseService.deleteCourseCascade(req.params.id);
 
-    // 1. Find Modules
-    const modules = await Module.find({ course: course._id });
-    const moduleIds = modules.map(m => m._id);
-    console.log(`[DELETE] Step 1: Found ${moduleIds.length} modules.`);
-
-    // 2. Find Lessons
-    const lessons = moduleIds.length
-      ? await Lesson.find({ module: { $in: moduleIds } })
-      : [];
-    const lessonIds = lessons.map(l => l._id);
-    console.log(`[DELETE] Step 2: Found ${lessonIds.length} lessons.`);
-
-    // 3. Find Assignments & Quizzes
-    const assignments = lessonIds.length
-      ? await Assignment.find({ lesson: { $in: lessonIds } })
-      : [];
-    const assignmentIds = assignments.map(a => a._id);
-
-    const quizzes = lessonIds.length
-      ? await Quiz.find({ lesson: { $in: lessonIds } })
-      : [];
-    const quizIds = quizzes.map(q => q._id);
-    console.log(`[DELETE] Step 3: Found ${assignmentIds.length} assignments and ${quizIds.length} quizzes.`);
-
-    // 4. Delete Dependent Data
-    try {
-      if (assignmentIds.length) {
-        const delSub = await Submission.deleteMany({ assignment: { $in: assignmentIds } });
-        console.log(`[DELETE] Step 4a: Deleted ${delSub.deletedCount} submissions.`);
-      }
-
-      if (quizIds.length) {
-        const delQue = await Question.deleteMany({ quiz: { $in: quizIds } });
-        console.log(`[DELETE] Step 4b: Deleted ${delQue.deletedCount} quiz questions.`);
-      }
-
-      const delAsg = await Assignment.deleteMany({ _id: { $in: assignmentIds } });
-      const delQiz = await Quiz.deleteMany({ _id: { $in: quizIds } });
-      console.log(`[DELETE] Step 4c: Deleted assignments (${delAsg.deletedCount}) and quizzes (${delQiz.deletedCount}).`);
-
-      const delLes = await Lesson.deleteMany({ _id: { $in: lessonIds } });
-      console.log(`[DELETE] Step 4d: Deleted ${delLes.deletedCount} lessons.`);
-
-      const delMod = await Module.deleteMany({ _id: { $in: moduleIds } });
-      console.log(`[DELETE] Step 4e: Deleted ${delMod.deletedCount} modules.`);
-
-      // 5. User-related data
-      const delEnr = await Enrollment.deleteMany({ course: course._id });
-      const delPrg = await Progress.deleteMany({ course: course._id });
-      const delCer = await Certificate.deleteMany({ course: course._id });
-      console.log(`[DELETE] Step 5: Deleted enrollments (${delEnr.deletedCount}), progress (${delPrg.deletedCount}), and certificates (${delCer.deletedCount}).`);
-
-      // 6. Final: delete course
-      await Course.findByIdAndDelete(course._id);
-      console.log(`[DELETE] Step 6: Course ${course._id} deleted successfully.`);
-
-      return res.json({
-        message: "Course deleted successfully",
-        details: {
-          modules: moduleIds.length,
-          lessons: lessonIds.length,
-          assignments: assignmentIds.length,
-          quizzes: quizIds.length
-        }
-      });
-
-    } catch (stepError) {
-      console.error("[DELETE] Error during cascading steps:", stepError);
-      throw stepError; // Re-throw to be caught by the outer catch
-    }
-
+    return res.json({
+      message: "Course deleted successfully",
+    });
   } catch (error) {
     console.error("Course deletion failed:", error);
     return res.status(500).json({

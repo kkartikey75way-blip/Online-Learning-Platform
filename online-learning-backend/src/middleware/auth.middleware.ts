@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
+import { AuthService } from "../services/auth.service";
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -15,7 +15,7 @@ export const authenticate = async (
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
   try {
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded: any = AuthService.verifyToken(token);
     req.user = await User.findById(decoded.userId);
     next();
   } catch {
@@ -34,7 +34,7 @@ export const authenticateOptional = async (
   }
 
   try {
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded: any = AuthService.verifyToken(token);
     req.user = await User.findById(decoded.userId) || undefined;
     next();
   } catch {

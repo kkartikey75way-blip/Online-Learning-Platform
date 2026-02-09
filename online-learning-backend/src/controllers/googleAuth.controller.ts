@@ -13,7 +13,7 @@ export const googleAuth = async (
         .status(400)
         .json({ message: "ID token is required" });
     }
-    const { user, token, isNewUser } =
+    const { user, token, refreshToken, isNewUser } =
       await googleAuthService(idToken, role);
 
     return res.status(200).json({
@@ -21,6 +21,7 @@ export const googleAuth = async (
         ? "Signup successful"
         : "Login successful",
       token,
+      refreshToken,
       user,
     });
   } catch (error) {

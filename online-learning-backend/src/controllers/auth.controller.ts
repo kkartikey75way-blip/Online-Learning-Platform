@@ -5,9 +5,7 @@ import crypto from "crypto";
 import { User } from "../models/user.model";
 import { sendEmail } from "../utils/sendEmail";
 
-const generateToken = (userId: string) =>
-  jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: "7d" });
-
+import { AuthService } from "../services/auth.service";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -44,12 +42,11 @@ export const register = async (req: Request, res: Response) => {
     return res.status(201).json({
       message: "Verification email sent",
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
     res.status(500).json({ message: "Signup failed" });
   }
 };
-
 
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
@@ -73,27 +70,66 @@ export const verifyEmail = async (req: Request, res: Response) => {
     await user.save();
 
     res.json({ message: "Email verified", alreadyVerified: false });
-  } catch {
+  } catch (err: unknown) {
     res.status(500).json({ message: "Verification failed" });
   }
 };
 
-
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email }).select("+password");
-  if (!user) return res.status(401).json({ message: "Invalid credentials" });
+  try {
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  if (!user.isVerified)
-    return res.status(403).json({ message: "Verify email first" });
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Verify email first" });
+    }
 
-  const match = await user.comparePassword(password);
-  if (!match) return res.status(401).json({ message: "Invalid credentials" });
+    const match = await user.comparePassword(password);
+    if (!match) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  const token = generateToken(user._id.toString());
+    const accessToken = AuthService.generateAccessToken(user._id.toString());
+    const refreshToken = AuthService.generateRefreshToken(user._id.toString());
 
-  res.json({ token, user });
+    // Use findByIdAndUpdate to avoid triggering pre("save") hooks
+    await User.findByIdAndUpdate(user._id, { refreshToken });
+
+    // Remove password from user object before sending
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.json({ token: accessToken, refreshToken, user: userObj });
+  } catch (err: unknown) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Login failed" });
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  const { token } = req.body;
+  if (!token) return res.status(401).json({ message: "Token required" });
+
+  try {
+    const user = await User.findOne({ refreshToken: token });
+    if (!user) return res.status(403).json({ message: "Invalid refresh token" });
+
+    AuthService.verifyToken(token);
+
+    const newAccessToken = AuthService.generateAccessToken(user._id.toString());
+    const newRefreshToken = AuthService.generateRefreshToken(user._id.toString());
+
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    res.json({ token: newAccessToken, refreshToken: newRefreshToken });
+  } catch (err: unknown) {
+    res.status(403).json({ message: "Invalid or expired refresh token" });
+  }
 };
 
 export const getMe = async (req: AuthRequest, res: Response) => {

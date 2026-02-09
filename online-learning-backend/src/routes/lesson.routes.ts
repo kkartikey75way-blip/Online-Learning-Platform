@@ -8,6 +8,6 @@ import { authenticate } from "../middleware/auth.middleware";
 const router = Router();
 
 router.post("/", authenticate, createLesson);
-router.get("/module/:moduleId", getLessonsByModule);
+router.get("/module/:moduleId", authenticate, getLessonsByModule);
 
 export default router;

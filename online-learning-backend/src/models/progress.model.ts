@@ -9,8 +9,18 @@ export interface IProgress extends Document {
 }
 
 const schema = new Schema<IProgress>({
-  user: { type: Schema.Types.ObjectId, ref: "User" },
-  course: { type: Schema.Types.ObjectId, ref: "Course" },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    index: true,
+  },
+  course: {
+    type: Schema.Types.ObjectId,
+    ref: "Course",
+    required: true,
+    index: true,
+  },
   completedLessons: [{ type: Schema.Types.ObjectId, ref: "Lesson" }],
   progressPercent: { type: Number, default: 0 },
   completed: { type: Boolean, default: false },

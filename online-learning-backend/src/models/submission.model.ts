@@ -10,8 +10,8 @@ export interface ISubmission extends Document {
 }
 
 const submissionSchema = new Schema<ISubmission>({
-  assignment: { type: Schema.Types.ObjectId, ref: "Assignment", required: true },
-  student: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  assignment: { type: Schema.Types.ObjectId, ref: "Assignment", required: true, index: true },
+  student: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
   link: { type: String, required: true },
   grade: { type: Number },
   feedback: { type: String },

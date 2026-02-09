@@ -67,19 +67,32 @@ export const getStudentConversations = async (req: AuthRequest, res: Response) =
         }
 
 
-        const students = await Message.distinct("sender", {
+        // Find unique students who have either sent messages to or received messages from this instructor for this course
+        const studentMessages = await Message.find({
             course: courseId,
-            receiver: instructorId,
+            $or: [{ sender: instructorId }, { receiver: instructorId }],
+        });
+
+        const studentIds = new Set<string>();
+        studentMessages.forEach(msg => {
+            const sid = msg.sender.toString() === instructorId.toString()
+                ? msg.receiver.toString()
+                : msg.sender.toString();
+            studentIds.add(sid);
         });
 
         const studentData = await Promise.all(
-            students.map(async (sid) => {
+            Array.from(studentIds).map(async (sid) => {
                 const lastMsg = await Message.findOne({
                     course: courseId,
-                    $or: [{ sender: sid }, { receiver: sid }],
+                    $or: [
+                        { sender: sid, receiver: instructorId },
+                        { sender: instructorId, receiver: sid }
+                    ],
                 })
                     .sort({ createdAt: -1 })
                     .populate("sender", "name");
+
                 return {
                     studentId: sid,
                     lastMessage: lastMsg,

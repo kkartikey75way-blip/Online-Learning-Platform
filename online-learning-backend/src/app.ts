@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.routes";
 import courseRoutes from "./routes/course.routes";
@@ -17,8 +18,19 @@ import messageRoutes from "./routes/message.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
 
-
 const app = express();
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again after 15 minutes"
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // stricter limit for auth routes
+  message: "Too many login attempts, please try again after 15 minutes"
+});
 
 app.use(
   cors({
@@ -28,8 +40,9 @@ app.use(
 );
 
 app.use(express.json());
+app.use(generalLimiter);
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/lessons", lessonRoutes);

@@ -1,44 +1,51 @@
-import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { api } from "../services/api";
 import { loginSuccess } from "../store/reducers/authReducer";
 import type { AppDispatch } from "../store/store";
+
+import { loginSchema, LoginFormValues } from "../schemas/auth.schema";
 
 export default function Login() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
 
   const redirectByRole = (role: "INSTRUCTOR" | "STUDENT") => {
     navigate(role === "INSTRUCTOR" ? "/instructor" : "/student");
   };
 
-  const handleLogin = async () => {
+  const onSubmit = async (data: LoginFormValues) => {
     try {
-      const res = await api.post("/auth/login", {
-        email,
-        password,
-      });
+      const res = await api.post("/auth/login", data);
 
-      // ✅ SAVE TOKEN (THIS WAS MISSING)
+      // ✅ SAVE TOKENS
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
 
       // ✅ UPDATE REDUX
       dispatch(loginSuccess(res.data));
 
       // ✅ ROLE REDIRECT
       redirectByRole(res.data.user.role);
-    } catch (error: any) {
-      Swal.fire(
-        "Login failed",
-        error?.response?.data?.message || "Invalid credentials",
-        "error"
-      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error && (error as any).response?.data?.message
+          ? (error as any).response.data.message
+          : "Invalid credentials";
+      Swal.fire("Login failed", message, "error");
     }
   };
 
@@ -48,8 +55,9 @@ export default function Login() {
         idToken: credential,
       });
 
-      // ✅ SAVE TOKEN
+      // ✅ SAVE TOKENS
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
 
       dispatch(loginSuccess(res.data));
       redirectByRole(res.data.user.role);
@@ -65,25 +73,41 @@ export default function Login() {
           Welcome back
         </h1>
 
-        <input
-          className="w-full mb-3 p-3 border rounded"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-3">
+            <input
+              className={`w-full p-3 border rounded ${errors.email ? "border-red-500" : ""
+                }`}
+              placeholder="Email"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+            )}
+          </div>
 
-        <input
-          type="password"
-          className="w-full mb-4 p-3 border rounded"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <div className="mb-4">
+            <input
+              type="password"
+              className={`w-full p-3 border rounded ${errors.password ? "border-red-500" : ""
+                }`}
+              placeholder="Password"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
 
-        <button
-          onClick={handleLogin}
-          className="w-full bg-teal-500 text-white py-3 rounded mb-4 cursor-pointer"
-        >
-          Login
-        </button>
+          <button
+            type="submit"
+            className="w-full bg-teal-500 text-white py-3 rounded mb-4 cursor-pointer hover:bg-teal-600 transition"
+          >
+            Login
+          </button>
+        </form>
 
         <div className="text-center text-sm mb-4 text-gray-500">
           or continue with
@@ -94,9 +118,7 @@ export default function Login() {
             onSuccess={(res) =>
               res.credential && handleGoogleLogin(res.credential)
             }
-            onError={() =>
-              Swal.fire("Google login failed", "", "error")
-            }
+            onError={() => Swal.fire("Google login failed", "", "error")}
           />
         </div>
       </div>

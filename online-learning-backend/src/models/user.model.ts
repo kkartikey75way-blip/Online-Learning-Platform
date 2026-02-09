@@ -11,13 +11,14 @@ export interface IUser extends Document {
   interests?: string[];
   verificationToken?: string;
   verificationTokenExpires?: Date;
+  refreshToken?: string;
   comparePassword(password: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
+    email: { type: String, unique: true, required: true, index: true },
     password: { type: String, select: false },
     role: { type: String, enum: ["STUDENT", "INSTRUCTOR"], default: "STUDENT" },
     provider: { type: String, enum: ["LOCAL", "GOOGLE"], default: "LOCAL" },
@@ -25,6 +26,7 @@ const userSchema = new Schema<IUser>(
     interests: { type: [String], default: [] },
     verificationToken: String,
     verificationTokenExpires: Date,
+    refreshToken: String,
   },
   { timestamps: true }
 );

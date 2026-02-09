@@ -1,6 +1,9 @@
 import { Response } from "express";
 import type { AuthRequest } from "../types/auth-request";
 import { Lesson } from "../models/lesson.model";
+import { Module } from "../models/module.model";
+import { Enrollment } from "../models/enrollment.model";
+import { Course } from "../models/course.model";
 import mongoose from "mongoose";
 
 export const createLesson = async (
@@ -58,8 +61,32 @@ export const getLessonsByModule = async (
       });
     }
 
-    const lessons = await Lesson.find({ module: moduleId })
-      .sort({ order: 1 });
+    // 1. Find the module to get the course ID
+    const module = await Module.findById(moduleId);
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
+
+    const courseId = module.course;
+    const userId = req.user?._id;
+
+    // 2. Check if user is the instructor
+    const course = await Course.findById(courseId);
+    const isInstructor = course?.instructor.toString() === userId?.toString();
+
+    // 3. Check if user is enrolled
+    const isEnrolled = await Enrollment.findOne({
+      user: userId,
+      course: courseId,
+    });
+
+    if (!isInstructor && !isEnrolled) {
+      return res.status(403).json({
+        message: "You must be enrolled to access lesson content",
+      });
+    }
+
+    const lessons = await Lesson.find({ module: moduleId }).sort({ order: 1 });
 
     return res.status(200).json(lessons);
   } catch (error) {

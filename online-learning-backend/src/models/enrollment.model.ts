@@ -12,13 +12,15 @@ const enrollmentSchema = new Schema<IEnrollment>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     course: {
       type: Schema.Types.ObjectId,
       ref: "Course",
       required: true,
+      index: true,
     },
-    enrolledAt: { type: Date, default: Date.now }, 
+    enrolledAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

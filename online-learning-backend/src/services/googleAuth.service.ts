@@ -1,17 +1,10 @@
 import { OAuth2Client } from "google-auth-library";
-import jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
+import { AuthService } from "./auth.service";
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID
 );
-
-const generateToken = (userId: string) =>
-  jwt.sign(
-    { userId },
-    process.env.JWT_SECRET!,
-    { expiresIn: "7d" }
-  );
 
 export const googleAuthService = async (
   idToken: string,
@@ -40,17 +33,21 @@ export const googleAuthService = async (
       avatar: payload.picture,
       role: role ?? "STUDENT",
       provider: "GOOGLE",
-      isVerified: true, 
+      isVerified: true,
     });
 
     isNewUser = true;
   }
 
-  const token = generateToken(user._id.toString());
+  const accessToken = AuthService.generateAccessToken(user._id.toString());
+  const refreshToken = AuthService.generateRefreshToken(user._id.toString());
+
+  await User.findByIdAndUpdate(user._id, { refreshToken });
 
   return {
     user,
-    token,
+    token: accessToken,
+    refreshToken,
     isNewUser,
   };
 };
