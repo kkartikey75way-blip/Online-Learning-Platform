@@ -14,6 +14,7 @@ import { CurriculumSidebar } from "../components/course/CurriculumSidebar";
 import { NotesSection } from "../components/course/NotesSection";
 
 import type { Module, Lesson, Course } from "../types/course.types";
+import Swal from "sweetalert2"
 
 export default function CourseDetails() {
   const { id: courseId } = useParams<{ id: string }>();
@@ -131,21 +132,46 @@ export default function CourseDetails() {
   const handleEnroll = async () => {
     try {
       await api.post(`/courses/${courseId}/enroll`);
-      alert("Enrolled successfully!");
+
+      await Swal.fire({
+        icon: "success",
+        title: "Enrollment Successful 🎉",
+        text: "You now have full access to this course.",
+        confirmButtonColor: "#14b8a6", // teal-500
+      });
+
       await loadCourseData();
     } catch (e) {
-      alert("Failed to enroll");
+      Swal.fire({
+        icon: "error",
+        title: "Enrollment Failed",
+        text: "Something went wrong. Please try again.",
+      });
     }
   };
 
   const handleClaimCertificate = async () => {
     try {
       await api.post("/certificates/issue", { courseId });
-      alert("Certificate Issued! Check your profile.");
-    } catch (e) {
-      alert("Failed to issue certificate. Ensure course is completed.");
+
+      await Swal.fire({
+        icon: "success",
+        title: "Certificate Issued 🎓",
+        text: "Your certificate has been successfully issued. You can download it from your profile.",
+        confirmButtonColor: "#14b8a6",
+      });
+    } catch (e: any) {
+      await Swal.fire({
+        icon: "error",
+        title: "Certificate Not Issued",
+        text:
+          e?.response?.data?.message ||
+          "Please complete the course 100% before claiming your certificate.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
+
 
   const handleComplete = async (lessonId: string) => {
     if (!courseId || completed.has(lessonId)) return;

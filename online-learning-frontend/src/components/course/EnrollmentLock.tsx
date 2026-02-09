@@ -1,5 +1,6 @@
 import React from "react";
 import { HiOutlineLockClosed, HiOutlineCheckCircle } from "react-icons/hi2";
+import Swal from "sweetalert2";
 
 interface EnrollmentLockProps {
     onEnroll: () => void;

@@ -25,5 +25,6 @@ export interface Certificate {
         title: string;
     };
     issuedAt: string;
+    issueDate: string;
     certificateId: string;
 }

@@ -14,6 +14,7 @@ export default function CertificatePage() {
   const certRef = useRef<HTMLDivElement>(null);
   const [userName, setUserName] = useState("Student");
 
+
   useEffect(() => {
     getMyCertificates().then(setCerts);
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -107,7 +108,7 @@ export default function CertificatePage() {
                   studentName={userName}
                   courseTitle={selectedCert.course.title}
                   date={new Date(selectedCert.issuedAt || selectedCert.issueDate).toLocaleDateString()}
-                  credentialId={selectedCert.credentialId || selectedCert._id.substring(0, 8).toUpperCase()}
+                  credentialId={selectedCert.certificateId || selectedCert._id.substring(0, 8).toUpperCase()}
                 />
               </div>
             </div>
@@ -146,7 +147,7 @@ export default function CertificatePage() {
             studentName={userName}
             courseTitle={selectedCert.course.title}
             date={new Date(selectedCert.issuedAt || selectedCert.issueDate).toLocaleDateString()}
-            credentialId={selectedCert.credentialId || selectedCert._id.substring(0, 8).toUpperCase()}
+            credentialId={selectedCert.certificateId || selectedCert._id.substring(0, 8).toUpperCase()}
           />
         )}
       </div>
