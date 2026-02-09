@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getModuleAssignment, submitAssignment, getMySubmission } from "../services/assignment.service";
 import { HiOutlineDocumentText, HiOutlineLink, HiOutlineCheckCircle, HiOutlineClock } from "react-icons/hi2";
 import { Assignment, Submission } from "../types/assignment-certificate";
+import Swal from "sweetalert2";
 
 interface AssignmentPageProps {
   moduleId: string;
@@ -47,12 +48,26 @@ export default function AssignmentPage({ moduleId }: AssignmentPageProps) {
     if (!link || !assignment) return;
 
     setSubmitting(true);
+
     try {
       const res = await submitAssignment(assignment._id, link);
       setSubmission(res);
-      alert("Assignment submitted successfully!");
-    } catch (err) {
-      alert("Failed to submit assignment");
+
+      await Swal.fire({
+        icon: "success",
+        title: "Assignment Submitted !!",
+        text: "Your assignment has been submitted successfully.",
+        confirmButtonColor: "#14b8a6", // teal
+      });
+    } catch (err: any) {
+      await Swal.fire({
+        icon: "error",
+        title: "Submission Failed",
+        text:
+          err?.response?.data?.message ||
+          "Unable to submit assignment. Please try again.",
+        confirmButtonColor: "#ef4444", // red
+      });
     } finally {
       setSubmitting(false);
     }
