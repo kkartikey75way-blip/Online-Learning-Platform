@@ -16,7 +16,7 @@ export default function RoleProtectedRoute({
 
   if (!user) return null; // wait for auth
 
-  if (!allowedRoles.includes(user.role)) {
+  if (!user.role || !allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 

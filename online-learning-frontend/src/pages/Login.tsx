@@ -32,14 +32,11 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", data);
 
-      // ✅ SAVE TOKENS
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("refreshToken", res.data.refreshToken);
 
-      // ✅ UPDATE REDUX
       dispatch(loginSuccess(res.data));
 
-      // ✅ ROLE REDIRECT
       redirectByRole(res.data.user.role);
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Invalid credentials");
@@ -53,7 +50,6 @@ export default function Login() {
         idToken: credential,
       });
 
-      // ✅ SAVE TOKENS
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("refreshToken", res.data.refreshToken);
 
