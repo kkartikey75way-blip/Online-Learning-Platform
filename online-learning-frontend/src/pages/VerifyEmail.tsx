@@ -22,13 +22,17 @@ export default function VerifyEmail() {
         });
 
         navigate("/login");
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const message = error && typeof error === 'object' && 'response' in error &&
+          error.response && typeof error.response === 'object' && 'data' in error.response &&
+          error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
+          ? String(error.response.data.message)
+          : "Verification failed";
+
         Swal.fire({
           icon: "error",
           title: "Verification failed",
-          text:
-            error?.response?.data?.message ||
-            "Invalid or expired link",
+          text: message,
         });
       }
     };

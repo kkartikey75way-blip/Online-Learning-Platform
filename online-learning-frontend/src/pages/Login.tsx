@@ -8,6 +8,7 @@ import * as z from "zod";
 import { api } from "../services/api";
 import { loginSuccess } from "../store/reducers/authReducer";
 import type { AppDispatch } from "../store/store";
+import { getErrorMessage } from "../utils/error-utils";
 
 import { loginSchema, LoginFormValues } from "../schemas/auth.schema";
 
@@ -41,10 +42,7 @@ export default function Login() {
       // ✅ ROLE REDIRECT
       redirectByRole(res.data.user.role);
     } catch (error: unknown) {
-      const message =
-        error instanceof Error && (error as any).response?.data?.message
-          ? (error as any).response.data.message
-          : "Invalid credentials";
+      const message = getErrorMessage(error, "Invalid credentials");
       Swal.fire("Login failed", message, "error");
     }
   };

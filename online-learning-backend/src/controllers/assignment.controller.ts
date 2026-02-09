@@ -94,7 +94,10 @@ export const gradeSubmission = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Submission not found" });
     }
 
-    const assignment = submission.assignment as any;
+    interface PopulatedAssignment {
+      course: { instructor: { toString(): string } };
+    }
+    const assignment = submission.assignment as unknown as PopulatedAssignment;
     if (assignment.course.instructor.toString() !== instructorId.toString()) {
       return res.status(403).json({ message: "Only the course instructor can grade submissions" });
     }

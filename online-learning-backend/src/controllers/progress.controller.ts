@@ -106,7 +106,7 @@ export const markLessonComplete = async (
         },
       },
       { upsert: true, new: true }
-    ) as any;
+    );
   }
 
   if (!progress) {
@@ -121,7 +121,7 @@ export const markLessonComplete = async (
     return res.json(progress);
   }
 
-  progress.completedLessons.push(lessonId as any);
+  progress.completedLessons.push(lessonId as unknown as typeof progress.completedLessons[0]);
 
   const modules = await Module.find({ course: courseId });
   const moduleIds = modules.map((m) => m._id);

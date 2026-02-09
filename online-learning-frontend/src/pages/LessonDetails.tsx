@@ -1,10 +1,11 @@
 import LessonVideoRecommendations from "../components/LessonVideoRecommendations";
+import { Lesson } from "../types/course.types";
 
-const LessonDetails = ({ lesson }: { lesson: any }) => {
+const LessonDetails = ({ lesson }: { lesson: Lesson }) => {
     return (
         <div>
             <h1 className="text-2xl font-bold">{lesson.title}</h1>
-            <p className="mt-2">{lesson.description}</p>
+            <p className="mt-2">{lesson.content}</p>
 
             <div className="mt-4 mb-6">
                 {lesson.videoUrl ? (

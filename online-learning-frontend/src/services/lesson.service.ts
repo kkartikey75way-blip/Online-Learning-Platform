@@ -1,7 +1,8 @@
 import { api } from "./api";
+import { CreateLessonData } from "../types/service-data";
 
 export const createLesson = async (
-  data: any
+  data: CreateLessonData
 ) => {
   const res = await api.post("/lessons", data);
   return res.data;

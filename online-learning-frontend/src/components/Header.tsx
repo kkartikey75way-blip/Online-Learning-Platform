@@ -88,6 +88,11 @@ export default function Header() {
             user?.role === "INSTRUCTOR" && (
               <>
                 <NavBtn
+                  label="Courses"
+                  icon={<FiBookOpen />}
+                  onClick={() => navigate("/courses")}
+                />
+                <NavBtn
                   label="Dashboard"
                   icon={<FiUser />}
                   onClick={() => navigate("/instructor")}
@@ -134,9 +139,8 @@ function NavBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1 cursor-pointer hover:text-teal-500 ${
-        active ? "text-teal-500" : "text-indigo-900"
-      }`}
+      className={`flex items-center gap-1 cursor-pointer hover:text-teal-500 ${active ? "text-teal-500" : "text-indigo-900"
+        }`}
     >
       {icon}
       {label}

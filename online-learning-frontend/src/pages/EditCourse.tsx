@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { api } from "../services/api";
 import { updateCourse, getCourseById } from "../services/course.service";
+import { getErrorMessage } from "../utils/error-utils";
 
 export default function EditCourse() {
     const navigate = useNavigate();
@@ -51,11 +52,10 @@ export default function EditCourse() {
             } else {
                 navigate("/instructor");
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             Swal.fire(
                 "Failed",
-                error?.response?.data?.message ||
-                "Course update failed",
+                getErrorMessage(error, "Course update failed"),
                 "error"
             );
         }

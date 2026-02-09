@@ -4,6 +4,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "../services/api";
 import { courseSchema, CourseFormValues } from "../schemas/course.schema";
+import { getErrorMessage } from "../utils/error-utils";
 
 export default function CreateCourse() {
   const navigate = useNavigate();
@@ -38,9 +39,7 @@ export default function CreateCourse() {
 
       navigate(`/instructor/course/${courseId}/builder`);
     } catch (error: unknown) {
-      const message = error instanceof Error && (error as any).response?.data?.message
-        ? (error as any).response.data.message
-        : "Course creation failed";
+      const message = getErrorMessage(error, "Failed to create course");
       Swal.fire("Failed", message, "error");
     }
   };

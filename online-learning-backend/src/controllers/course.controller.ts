@@ -117,7 +117,12 @@ export const getRecommendedCourses = async (
       return res.status(404).json({ message: "User not found" });
     }
 
-    let query: any = { isPublished: true };
+    interface CourseQuery {
+      isPublished: boolean;
+      category?: { $in: string[] };
+    }
+
+    const query: CourseQuery = { isPublished: true };
 
     if (user.interests && user.interests.length > 0) {
       query.category = { $in: user.interests };
@@ -163,7 +168,7 @@ export const getCourseById = async (
     const isInstructor =
       !!req.user &&
       course.instructor &&
-      (course.instructor as any)._id.toString() ===
+      (course.instructor as { _id: { toString(): string } })._id.toString() ===
       req.user._id.toString();
 
     if (!course.isPublished && !isInstructor) {
@@ -197,10 +202,11 @@ export const enrollInCourse = async (
     res.json({
       message: "Enrolled successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Enrollment error:", error);
+    const message = error instanceof Error ? error.message : "Enrollment failed";
     res.status(400).json({
-      message: error.message || "Enrollment failed",
+      message,
     });
   }
 };

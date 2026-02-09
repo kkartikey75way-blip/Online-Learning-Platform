@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { getCoursePosts, createPost, createComment, getPostComments } from "../services/discussion.service";
 import { HiOutlineChatBubbleLeftRight, HiOutlineUserCircle, HiChevronDown, HiChevronUp, HiOutlinePaperAirplane, HiOutlineChatBubbleLeft } from "react-icons/hi2";
 import { io, Socket } from "socket.io-client";
+import { User } from "../types/user";
 
 interface Post {
     _id: string;
@@ -17,6 +18,7 @@ interface Comment {
     content: string;
     user: { _id: string; name: string };
     createdAt: string;
+    post?: string; // For socket events
 }
 
 export default function DiscussionSection({ courseId }: { courseId: string }) {
@@ -29,7 +31,7 @@ export default function DiscussionSection({ courseId }: { courseId: string }) {
     const [comments, setComments] = useState<{ [postId: string]: Comment[] }>({});
     const [newComment, setNewComment] = useState("");
     const [commentingId, setCommentingId] = useState<string | null>(null);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
 
     const socketRef = useRef<Socket | null>(null);
 
@@ -58,11 +60,13 @@ export default function DiscussionSection({ courseId }: { courseId: string }) {
             setPosts(prev => [post, ...prev]);
         });
 
-        socketRef.current.on("new_comment", (comment: any) => {
-            setComments(prev => ({
-                ...prev,
-                [comment.post]: prev[comment.post] ? [...prev[comment.post], comment] : [comment]
-            }));
+        socketRef.current.on("new_comment", (comment: Comment) => {
+            if (comment.post) {
+                setComments(prev => ({
+                    ...prev,
+                    [comment.post!]: prev[comment.post!] ? [...prev[comment.post!], comment] : [comment]
+                }));
+            }
         });
 
         return () => {

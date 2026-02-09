@@ -13,8 +13,8 @@ async function listModels() {
         console.log("Testing gemini-pro...");
         await model.generateContent("Hello");
         console.log("gemini-pro works!");
-    } catch (e: any) {
-        console.log("gemini-pro failed:", e.message);
+    } catch (e: unknown) {
+        console.log("gemini-pro failed:", (e as Error).message);
     }
 
     try {
@@ -22,8 +22,8 @@ async function listModels() {
         console.log("Testing gemini-1.5-flash...");
         await model.generateContent("Hello");
         console.log("gemini-1.5-flash works!");
-    } catch (e: any) {
-        console.log("gemini-1.5-flash failed:", e.message);
+    } catch (e: unknown) {
+        console.log("gemini-1.5-flash failed:", (e as Error).message);
     }
 }
 

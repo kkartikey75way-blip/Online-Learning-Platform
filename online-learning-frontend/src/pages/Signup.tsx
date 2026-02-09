@@ -8,6 +8,7 @@ import * as z from "zod";
 import { api } from "../services/api";
 import { loginSuccess } from "../store/reducers/authReducer";
 import type { AppDispatch } from "../store/store";
+import { getErrorMessage } from "../utils/error-utils";
 
 import { signupSchema, SignupFormValues } from "../schemas/auth.schema";
 
@@ -43,10 +44,7 @@ export default function Signup() {
 
       navigate("/login");
     } catch (error: unknown) {
-      const message =
-        error instanceof Error && (error as any).response?.data?.message
-          ? (error as any).response.data.message
-          : "Something went wrong";
+      const message = getErrorMessage(error, "Something went wrong");
       Swal.fire("Signup failed", message, "error");
     }
   };

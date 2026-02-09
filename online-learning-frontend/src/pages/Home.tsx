@@ -12,12 +12,13 @@ import { getRecommendedCourses } from "../services/course.service";
 import { RootState } from "../store/store";
 import InterestSelector from "../components/InterestSelector";
 import { loginSuccess } from "../store/reducers/authReducer";
+import { Course } from "../types/course.types";
 
 export default function Home() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [query, setQuery] = useState("");
-  const [recommended, setRecommended] = useState<any[]>([]);
+  const [recommended, setRecommended] = useState<Course[]>([]);
   const [showSelector, setShowSelector] = useState(false);
   const { isAuthenticated, user, token } = useSelector((state: RootState) => state.auth);
 

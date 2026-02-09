@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAllCourses, getCoursesByInstructor } from "../services/course.service";
 import { HiOutlineUser, HiOutlineTag } from "react-icons/hi2";
 
+import { Course } from "../types/course.types";
+
 export default function CourseList() {
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

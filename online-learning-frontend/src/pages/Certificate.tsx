@@ -5,9 +5,11 @@ import download from "downloadjs";
 import CertificateTemplate from "../components/CertificateTemplate";
 import { HiOutlineAcademicCap, HiArrowDownTray, HiOutlineEye, HiOutlineXMark } from "react-icons/hi2";
 
-export default function Certificates() {
-  const [certs, setCerts] = useState<any[]>([]);
-  const [selectedCert, setSelectedCert] = useState<any | null>(null);
+import { Certificate } from "../types/assignment-certificate";
+
+export default function CertificatePage() {
+  const [certs, setCerts] = useState<Certificate[]>([]);
+  const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
   const [userName, setUserName] = useState("Student");

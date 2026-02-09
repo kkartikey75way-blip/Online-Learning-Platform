@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { UpdateCourseData } from "../types/service-data";
 
 export const getAllCourses = async () => {
   const res = await api.get("/courses");
@@ -30,7 +31,7 @@ export const deleteCourse = async (id: string) => {
   return res.data;
 };
 
-export const updateCourse = async (id: string, data: any) => {
+export const updateCourse = async (id: string, data: UpdateCourseData) => {
   const res = await api.put(`/courses/${id}`, data);
   return res.data;
 };

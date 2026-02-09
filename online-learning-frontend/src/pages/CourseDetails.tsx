@@ -32,6 +32,26 @@ export default function CourseDetails() {
   const [isInstructor, setIsInstructor] = useState(false);
   const [loadingEnrollment, setLoadingEnrollment] = useState(true);
 
+  // Helper functions for cleaner JSX
+  const getTabClassName = (tab: string, isDisabled: boolean): string => {
+    if (isDisabled) {
+      return "flex-1 py-3 font-semibold text-sm capitalize transition opacity-40 cursor-not-allowed bg-gray-100 text-gray-400";
+    }
+
+    const baseClasses = "flex-1 py-3 font-semibold text-sm capitalize transition";
+    const activeClasses = activeTab === tab
+      ? "text-teal-600 border-b-2 border-teal-600 bg-teal-50"
+      : "text-gray-500 hover:bg-gray-50";
+
+    return `${baseClasses} ${activeClasses}`;
+  };
+
+  const getTabLabel = (tab: string): string => {
+    if (tab === "discussion") return "Forums";
+    if (tab === "messages") return "Contact";
+    return tab;
+  };
+
   const loadCourseData = async () => {
     if (!courseId) return;
     try {
@@ -57,9 +77,12 @@ export default function CourseDetails() {
           completedSet = new Set(progressRes.data.completedLessons);
           unlocked = progressRes.data.unlockedLessons || [];
         }
-      } catch (e: any) {
-        if (e.response?.status !== 403) {
-          console.error("Progress fetch failed", e);
+      } catch (e: unknown) {
+        if (e && typeof e === 'object' && 'response' in e) {
+          const axiosError = e as { response?: { status?: number } };
+          if (axiosError.response?.status !== 403) {
+            console.error("Progress fetch failed", e);
+          }
         }
         setIsEnrolled(false);
         if (!currentInstructor) {
@@ -79,7 +102,7 @@ export default function CourseDetails() {
               isLocked: !currentInstructor && (!currentEnrolled || (unlocked.length > 0 ? !unlocked.includes(lesson._id) : false)),
             }));
             return { ...mod, lessons };
-          } catch (error: any) {
+          } catch (error: unknown) {
             return { ...mod, lessons: [] };
           }
         })
@@ -142,7 +165,7 @@ export default function CourseDetails() {
     });
   };
 
-  const findRelativeLesson = (offset: number) => {
+  const findRelativeLesson = (offset: number): Lesson | null => {
     if (!activeLesson || modules.length === 0) return null;
 
     const allLessons = modules.flatMap(m => m.lessons);
@@ -155,58 +178,58 @@ export default function CourseDetails() {
   const nextLesson = findRelativeLesson(1);
   const prevLesson = findRelativeLesson(-1);
 
+  const tabs = ["curriculum", "info", "discussion", "notes", "messages"] as const;
+
   return (
     <div className="flex flex-col h-screen bg-[#f9f7f2]">
       <CourseHeader title={courseData?.title || "Loading Course..."} progress={progress} />
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 bg-gray-900 overflow-y-auto relative flex flex-col items-center justify-center">
-          {!isEnrolled && !isInstructor && !loadingEnrollment ? (
-            <EnrollmentLock onEnroll={handleEnroll} />
-          ) : activeLesson ? (
-            <div className="w-full h-full flex flex-col">
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {!isEnrolled && !isInstructor && !loadingEnrollment && <EnrollmentLock onEnroll={handleEnroll} />}
+
+          {(isEnrolled || isInstructor) && (
+            <>
               <VideoPlayer lesson={activeLesson} />
-              <LessonControls
-                activeLesson={activeLesson}
-                onPrev={() => prevLesson && setActiveLesson(prevLesson)}
-                onNext={() => nextLesson && setActiveLesson(nextLesson)}
-                hasPrev={!!prevLesson}
-                hasNext={!!nextLesson}
-                progress={progress}
-                isCompleted={completed.has(activeLesson._id)}
-                onComplete={() => handleComplete(activeLesson._id)}
-                onClaimCertificate={handleClaimCertificate}
-              />
-            </div>
-          ) : (
-            <VideoPlayer lesson={null} />
+
+              {activeLesson && (
+                <LessonControls
+                  activeLesson={activeLesson}
+                  onPrev={() => prevLesson && setActiveLesson(prevLesson)}
+                  onNext={() => nextLesson && setActiveLesson(nextLesson)}
+                  hasPrev={!!prevLesson}
+                  hasNext={!!nextLesson}
+                  progress={progress}
+                  isCompleted={completed.has(activeLesson._id)}
+                  onComplete={() => handleComplete(activeLesson._id)}
+                  onClaimCertificate={handleClaimCertificate}
+                />
+              )}
+            </>
           )}
         </div>
 
         <div className="w-96 bg-white border-l flex flex-col shrink-0 z-20 shadow-lg">
           <div className="flex border-b">
-            {(["curriculum", "info", "discussion", "notes", "messages"] as const).map(tab => {
-              const isRestricted = ["curriculum", "discussion", "notes", "messages"].includes(tab);
-              const isDisabled = isRestricted && !isEnrolled && !isInstructor;
+            {tabs.map(tab => {
+              const isDisabled = !isInstructor && !isEnrolled && tab !== "info" && tab !== "discussion";
 
               return (
                 <button
                   key={tab}
                   onClick={() => !isDisabled && setActiveTab(tab)}
                   disabled={isDisabled}
-                  className={`flex-1 py-3 font-semibold text-sm capitalize transition ${isDisabled ? "opacity-40 cursor-not-allowed bg-gray-100 text-gray-400" :
-                    activeTab === tab ? "text-teal-600 border-b-2 border-teal-600 bg-teal-50" : "text-gray-500 hover:bg-gray-50"
-                    }`}
+                  className={getTabClassName(tab, isDisabled)}
                   title={isDisabled ? "Enroll to access" : ""}
                 >
-                  {tab === "discussion" ? "Forums" : tab === "messages" ? "Contact" : tab}
+                  {getTabLabel(tab)}
                 </button>
               );
             })}
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {activeTab === "curriculum" && (
+            {activeTab === "curriculum" && courseData && (
               <CurriculumSidebar
                 modules={modules}
                 expandedModules={expandedModules}
@@ -235,10 +258,10 @@ export default function CourseDetails() {
                       className="flex items-center gap-2 mb-4 cursor-pointer hover:text-indigo-600 transition-colors group"
                     >
                       <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs group-hover:bg-indigo-200 transition-colors">
-                        {courseData.instructor?.name?.substring(0, 2) || "IN"}
+                        {courseData.instructor?.name?.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium text-gray-600 group-hover:text-indigo-600 transition-colors">
-                        Instructor: {courseData.instructor?.name || "Unknown"}
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600">
+                        {courseData.instructor?.name}
                       </span>
                     </div>
                     <div className="prose prose-sm text-gray-600">

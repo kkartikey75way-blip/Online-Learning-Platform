@@ -1,9 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../models/user.model";
+import { User, IUser } from "../models/user.model";
 import { AuthService } from "../services/auth.service";
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: IUser;
+}
+
+interface JwtPayload {
+  userId: string;
 }
 
 export const authenticate = async (
@@ -15,8 +19,12 @@ export const authenticate = async (
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
   try {
-    const decoded: any = AuthService.verifyToken(token);
-    req.user = await User.findById(decoded.userId);
+    const decoded = AuthService.verifyToken(token) as JwtPayload;
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    req.user = user;
     next();
   } catch {
     res.status(401).json({ message: "Invalid token" });
@@ -34,7 +42,7 @@ export const authenticateOptional = async (
   }
 
   try {
-    const decoded: any = AuthService.verifyToken(token);
+    const decoded = AuthService.verifyToken(token) as JwtPayload;
     req.user = await User.findById(decoded.userId) || undefined;
     next();
   } catch {

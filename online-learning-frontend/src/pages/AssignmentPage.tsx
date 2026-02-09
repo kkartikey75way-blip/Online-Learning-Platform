@@ -1,27 +1,31 @@
 import { useEffect, useState } from "react";
-import { getModuleAssignment, submitAssignment, getMySubmission, getAssignmentById } from "../services/assignment.service";
+import { getModuleAssignment, submitAssignment, getMySubmission } from "../services/assignment.service";
 import { HiOutlineDocumentText, HiOutlineLink, HiOutlineCheckCircle, HiOutlineClock } from "react-icons/hi2";
-import { useParams } from "react-router-dom";
+import { Assignment, Submission } from "../types/assignment-certificate";
 
-export default function AssignmentPage({ moduleId }: { moduleId?: string }) {
-  const { assignmentId: paramAssignmentId } = useParams<{ assignmentId: string }>();
-  const [assignment, setAssignment] = useState<any>(null);
-  const [submission, setSubmission] = useState<any>(null);
+interface AssignmentPageProps {
+  moduleId: string;
+}
+
+export default function AssignmentPage({ moduleId }: AssignmentPageProps) {
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [submission, setSubmission] = useState<Submission | null>(null);
   const [link, setLink] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Helper function for cleaner button text logic
+  const getSubmitButtonText = (): string => {
+    if (submitting) return "Submitting...";
+    if (submission) return "Update Submission";
+    return "Submit Assignment";
+  };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        let assignData;
-        if (moduleId) {
-          assignData = await getModuleAssignment(moduleId);
-        } else if (paramAssignmentId) {
-          assignData = await getAssignmentById(paramAssignmentId); // Fallback or add service
-        }
-
+        const assignData = await getModuleAssignment(moduleId);
         setAssignment(assignData);
 
         if (assignData) {
@@ -132,7 +136,7 @@ export default function AssignmentPage({ moduleId }: { moduleId?: string }) {
                 disabled={submitting || !link}
                 className="w-full sm:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50 disabled:shadow-none"
               >
-                {submitting ? "Submitting..." : submission ? "Update Submission" : "Submit Assignment"}
+                {getSubmitButtonText()}
               </button>
             </div>
           </form>

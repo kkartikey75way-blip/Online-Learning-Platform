@@ -1,6 +1,6 @@
 import React from "react";
 import { HiChevronDown, HiChevronUp, HiOutlineCheckCircle, HiOutlineLockClosed, HiOutlinePlayCircle, HiOutlineDocumentText } from "react-icons/hi2";
-import { Module, Lesson } from "../../types/course.types";
+import { Module, Lesson, Course } from "../../types/course.types";
 
 interface CurriculumSidebarProps {
     modules: Module[];
@@ -9,7 +9,7 @@ interface CurriculumSidebarProps {
     activeLesson: Lesson | null;
     setActiveLesson: (lesson: Lesson) => void;
     completedLessons: Set<string>;
-    courseData: any;
+    courseData: Course;
     onAssignmentClick: (moduleId: string) => void;
     activeTab: string;
     activeModuleId: string | null;
